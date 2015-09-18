@@ -24,7 +24,6 @@ package org.cytoscape.network.merge.internal.ui;
  * #L%
  */
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -42,6 +41,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
@@ -53,6 +53,7 @@ import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.model.AttributeMapping;
 import org.cytoscape.network.merge.internal.model.MatchingAttribute;
 import org.cytoscape.network.merge.internal.util.ColumnType;
+import org.cytoscape.util.swing.LookAndFeelUtil;
 
 /**
  * Table for customizing attribute mapping from original networks to resulting network
@@ -150,10 +151,10 @@ class MergeAttributeTable extends JTable {
 						}
 						
 						if (row >= table.getRowCount() - 1) {
-							label.setBackground(Color.LIGHT_GRAY);
+							label.setBackground(UIManager.getColor("TextField.inactiveForeground"));
 						} else {
 							if (isNode && row == 0) {
-								label.setForeground(Color.RED);
+								label.setForeground(LookAndFeelUtil.getErrorColor());
 								label.setToolTipText("Change me!");
 							} else {
 								label.setToolTipText("Click to change...");
@@ -208,9 +209,9 @@ class MergeAttributeTable extends JTable {
 						}
 						
 						if (row >= table.getRowCount() - 1) {
-							label.setBackground(Color.LIGHT_GRAY);
+							label.setBackground(UIManager.getColor("TextField.inactiveForeground"));
 						} else if (!table.isCellEditable(row, column)) {
-							label.setBackground(Color.LIGHT_GRAY);
+							label.setBackground(UIManager.getColor("TextField.inactiveForeground"));
 							label.setToolTipText("Only types of new columns are changeable");
 						}
 						
