@@ -26,6 +26,7 @@ package org.cytoscape.network.merge.internal.ui;
 
 import static javax.swing.GroupLayout.DEFAULT_SIZE;
 import static javax.swing.GroupLayout.PREFERRED_SIZE;
+import static org.cytoscape.util.swing.LookAndFeelUtil.isWinLAF;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -107,7 +108,6 @@ public class NetworkMergeDialog extends JDialog {
 	private JRadioButton difference2Btn;
 	private ButtonGroup differenceGroup;
 	private JPanel selectNetPnl;
-	private JPanel selectNetBtnPnl;
 	private JButton moveRightBtn;
 	private JButton moveLeftBtn;
 	private JButton moveUpBtn;
@@ -336,38 +336,46 @@ public class NetworkMergeDialog extends JDialog {
 			
 			final GroupLayout layout = new GroupLayout(selectNetPnl);
 			selectNetPnl.setLayout(layout);
-			layout.setAutoCreateContainerGaps(true);
+			layout.setAutoCreateContainerGaps(false);
+			layout.setAutoCreateGaps(isWinLAF());
 			
 			layout.setHorizontalGroup(layout.createSequentialGroup()
 					.addGroup(layout.createParallelGroup(Alignment.LEADING, true)
-						.addComponent(allNetsLbl)
-						.addComponent(listScr1, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-					)
-					.addComponent(getSelectNetBtnPnl(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
-					.addGroup(layout.createParallelGroup(Alignment.LEADING, true)
-						.addGroup(layout.createSequentialGroup()
-								.addComponent(selNetsLbl, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-								.addPreferredGap(ComponentPlacement.UNRELATED)
-								.addComponent(getMoveUpBtn())
-								.addPreferredGap(ComponentPlacement.RELATED)
-								.addComponent(getMoveDownBtn())
+							.addComponent(allNetsLbl, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+							.addGroup(layout.createSequentialGroup()
+									.addComponent(listScr1, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+									.addGroup(layout.createParallelGroup(Alignment.CENTER, false)
+											.addComponent(getMoveRightBtn(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+											.addComponent(getMoveLeftBtn(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+									)
 							)
-						.addComponent(listScr2, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+					)
+					.addGroup(layout.createParallelGroup(Alignment.LEADING, true)
+							.addGroup(layout.createSequentialGroup()
+									.addComponent(selNetsLbl, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+									.addComponent(getMoveUpBtn(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addComponent(getMoveDownBtn(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+							)
+							.addComponent(listScr2, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
 					)
 			);
-			layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE, true)
-					.addGroup(layout.createSequentialGroup()
-						.addComponent(allNetsLbl)
-						.addComponent(listScr1)
+			layout.setVerticalGroup(layout.createSequentialGroup()
+					.addGroup(layout.createParallelGroup(Alignment.BASELINE, false)
+							.addComponent(allNetsLbl, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+							.addComponent(selNetsLbl, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+							.addComponent(getMoveUpBtn(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+							.addComponent(getMoveDownBtn(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
 					)
-					.addComponent(getSelectNetBtnPnl(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-					.addGroup(layout.createSequentialGroup()
-						.addGroup(layout.createParallelGroup(Alignment.BASELINE, true)
-							.addComponent(selNetsLbl)
-							.addComponent(getMoveUpBtn())
-							.addComponent(getMoveDownBtn())
-						)
-						.addComponent(listScr2)
+					.addGroup(layout.createParallelGroup(Alignment.BASELINE, true)
+							.addComponent(listScr1, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+							.addGroup(layout.createSequentialGroup()
+									.addGap(0, 1, Short.MAX_VALUE)
+									.addComponent(getMoveRightBtn(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+									.addComponent(getMoveLeftBtn(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+									.addGap(0, 1, Short.MAX_VALUE)
+							)
+							.addComponent(listScr2, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
 					)
 			);
 		}
@@ -449,20 +457,6 @@ public class NetworkMergeDialog extends JDialog {
 		}
 		
 		return selectedNetLs;
-	}
-	
-	private JPanel getSelectNetBtnPnl() {
-		if (selectNetBtnPnl == null) {
-			selectNetBtnPnl = new JPanel();
-			selectNetBtnPnl.setLayout(new BoxLayout(selectNetBtnPnl, BoxLayout.Y_AXIS));
-			
-			selectNetBtnPnl.add(Box.createVerticalGlue());
-			selectNetBtnPnl.add(getMoveRightBtn());
-			selectNetBtnPnl.add(Box.createVerticalStrut(10));
-			selectNetBtnPnl.add(getMoveLeftBtn());
-		}
-		
-		return selectNetBtnPnl;
 	}
 	
 	private JButton getMoveRightBtn() {

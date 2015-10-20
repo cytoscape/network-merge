@@ -136,7 +136,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 			throw new NullPointerException();
 		}
 		
-		String i1 = network1.getRow(e1).get("interaction", String.class);
+		String i1 = network1.getRow(e1).get(CyEdge.INTERACTION, String.class);
 		
 		
 		CyNode source = e1.getSource();

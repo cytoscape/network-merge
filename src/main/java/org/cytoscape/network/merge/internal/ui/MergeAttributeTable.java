@@ -37,7 +37,6 @@ import java.util.Vector;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
@@ -124,14 +123,19 @@ class MergeAttributeTable extends JTable {
 					@Override
 					public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 							boolean hasFocus, int row, int column) {
-						final JLabel label = (JLabel) super.getTableCellRendererComponent(table, value,
-								isSelected, hasFocus, row, column);
+						super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 						
-						if (row < (isNode ? 1 : 0)) {// TODO Cytoscape3
-							label.setToolTipText("Change this in the matching node table above");
-						}
+						this.setForeground(
+								UIManager.getColor(isSelected ? "Table.selectionForeground" : "Table.foreground"));
+						this.setBackground(
+								UIManager.getColor(isSelected ? "Table.selectionBackground" : "Table.background"));
 						
-						return label;
+						if (row < (isNode ? 1 : 0)) // TODO Cytoscape3
+							this.setToolTipText("Change this in the matching node table above");
+						else
+							this.setToolTipText(null);
+						
+						return this;
 					}
 				});
 			} else if (this.isColumnMergedNetwork(i)) {
@@ -139,29 +143,33 @@ class MergeAttributeTable extends JTable {
 					@Override
 					public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 							boolean hasFocus, int row, int column) {
-						final JLabel label = (JLabel) super.getTableCellRendererComponent(table, value,
-								isSelected, hasFocus, row, column);
+						super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+						
+						if (isNode && row == 0)
+							this.setToolTipText("Change me!");
+						else
+							this.setToolTipText("Click to change...");
 						
 						if (isSelected) {
-							label.setForeground(table.getSelectionForeground());
-							label.setBackground(table.getSelectionBackground());
+							this.setForeground(UIManager.getColor("Table.selectionForeground"));
+							this.setBackground(UIManager.getColor("Table.selectionBackground"));
 						} else {
-							label.setForeground(table.getForeground());
-							label.setBackground(table.getBackground());
-						}
-						
-						if (row >= table.getRowCount() - 1) {
-							label.setBackground(UIManager.getColor("TextField.inactiveForeground"));
-						} else {
-							if (isNode && row == 0) {
-								label.setForeground(LookAndFeelUtil.getErrorColor());
-								label.setToolTipText("Change me!");
+							this.setBackground(UIManager.getColor("Table.background"));
+							
+							if (row >= table.getRowCount() - 1) {
+								this.setForeground(UIManager.getColor("TextField.inactiveForeground"));
 							} else {
-								label.setToolTipText("Click to change...");
+								if (isNode && row == 0) {
+									this.setForeground(LookAndFeelUtil.getErrorColor());
+									this.setToolTipText("Change me!");
+								} else {
+									this.setForeground(table.getForeground());
+									this.setToolTipText("Click to change...");
+								}
 							}
 						}
 						
-						return label;
+						return this;
 					}
 				});
 			} else if (this.isColumnMergedType(i)) {
@@ -175,13 +183,14 @@ class MergeAttributeTable extends JTable {
 
 					Map<CyNetwork, String> mapNetAttr = attributeMapping.getOriginalAttributeMap(iAttr);
 					Set<ColumnType> types = EnumSet.noneOf(ColumnType.class);
+					
 					for (Map.Entry<CyNetwork, String> entry : mapNetAttr.entrySet()) {
 						CyTable cyTable = attributeMapping.getCyTable(entry.getKey());
 						types.add(ColumnType.getType(cyTable.getColumn(entry.getValue())));
 					}
+					
 					ColumnType reasonalbeType = ColumnType.getResonableCompatibleConvertionType(types);
-					Vector<ColumnType> convertiableTypes = new Vector<>(
-							ColumnType.getConvertibleTypes(reasonalbeType));
+					Vector<ColumnType> convertiableTypes = new Vector<>(ColumnType.getConvertibleTypes(reasonalbeType));
 
 					cbvalues[ir] = convertiableTypes;
 
@@ -190,6 +199,7 @@ class MergeAttributeTable extends JTable {
 
 					rowEditor.setEditorAt(ir, new DefaultCellEditor(cb));
 				}
+				
 				column.setCellEditor(rowEditor);
 
 				// set renderer
@@ -197,25 +207,21 @@ class MergeAttributeTable extends JTable {
 					@Override
 					public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 							boolean hasFocus, int row, int column) {
-						final JLabel label = (JLabel) super.getTableCellRendererComponent(table, value,
-								isSelected, hasFocus, row, column);
+						super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 						
-						if (isSelected) {
-							label.setForeground(table.getSelectionForeground());
-							label.setBackground(table.getSelectionBackground());
-						} else {
-							label.setForeground(table.getForeground());
-							label.setBackground(table.getBackground());
-						}
+						this.setForeground(
+								UIManager.getColor(isSelected ? "Table.selectionForeground" : "Table.foreground"));
+						this.setBackground(
+								UIManager.getColor(isSelected ? "Table.selectionBackground" : "Table.background"));
 						
 						if (row >= table.getRowCount() - 1) {
-							label.setBackground(UIManager.getColor("TextField.inactiveForeground"));
+							this.setBackground(UIManager.getColor("TextField.inactiveForeground"));
 						} else if (!table.isCellEditable(row, column)) {
-							label.setBackground(UIManager.getColor("TextField.inactiveForeground"));
-							label.setToolTipText("Only types of new columns are changeable");
+							this.setBackground(UIManager.getColor("TextField.inactiveForeground"));
+							this.setToolTipText("Only types of new columns are changeable");
 						}
 						
-						return label;
+						return this;
 					}
 				});
 			}
