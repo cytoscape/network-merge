@@ -47,7 +47,7 @@ import org.cytoscape.network.merge.internal.util.ColumnType;
  * 
  */
 public class AttributeMappingImpl implements AttributeMapping {
-    private Map<CyNetwork,List<String>> attributeMapping; //attribute mapping, network to list of attributes
+    private Map<CyNetwork,List<String>> attributeMapping; // attribute mapping, network to list of attributes
     private List<String> mergedAttributes;
     private List<ColumnType> mergedAttributeTypes;
     private Map<CyNetwork,CyTable> cyTables;
