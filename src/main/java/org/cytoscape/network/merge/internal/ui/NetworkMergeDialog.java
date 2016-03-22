@@ -831,7 +831,7 @@ public class NetworkMergeDialog extends JDialog {
 					// Network merge task
 					final NetworkMergeTask nmTask = new NetworkMergeTask(cnf, cnm, netName, matchingAttr,
 							nodeAttrMapping, edgeAttrMapping, selectedNetData.getNetworkList(),
-							getOperation(), conflictCollector, selectedNetAttrIDType, tgtType,
+							getOperation(), getDifference1Btn().isSelected(), conflictCollector, selectedNetAttrIDType, tgtType,
 							getInNetMergeCkb().isSelected(), netViewCreator);
 
 					final TaskIterator ti = new TaskIterator(nmTask);

@@ -71,9 +71,9 @@ public interface NetworkMerge {
 	 *            networks to be merged
 	 * @param op
 	 *            operation
-	 * @param title
-	 *            title of the merged network
+	 * @param subtractOnlyUnconnectedNodes
+	 *            only subtract nodes if all their edges are to be removed (applies to difference only)
 	 * @return the merged network.
 	 */
-	public CyNetwork mergeNetwork(CyNetwork toNetwork, List<CyNetwork> fromNetworks, Operation op);
+	public CyNetwork mergeNetwork(CyNetwork toNetwork, List<CyNetwork> fromNetworks, Operation op, boolean subtractOnlyUnconnectedNodes);
 }

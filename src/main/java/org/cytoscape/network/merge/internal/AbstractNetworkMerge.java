@@ -227,7 +227,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public CyNetwork mergeNetwork(final CyNetwork mergedNetwork, final List<CyNetwork> fromNetworks, final Operation op) {
+	public CyNetwork mergeNetwork(final CyNetwork mergedNetwork, final List<CyNetwork> fromNetworks, final Operation op, final boolean subtractOnlyUnconnectedNodes) {
 		// Null checks for required fields...
 		if (mergedNetwork == null) { 
 			throw new NullPointerException("Merged networks wasn't created.");
@@ -326,7 +326,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 			CyNode source = mapNN.get(originalEdge.getSource());
 			CyNode target = mapNN.get(originalEdge.getTarget());
 			
-			if(op == Operation.DIFFERENCE) {
+			if(op == Operation.DIFFERENCE && subtractOnlyUnconnectedNodes) {
 				// For difference, need to create nodes if necessary.
 				
 				if(source == null) {
@@ -349,7 +349,8 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 					}
 					mergedNetwork.getRow(target).set(CyNetwork.NAME, name);
 				}
-			} else if (source == null || target == null) { // some of the node may be
+			} 
+			else if (source == null || target == null) { // some of the node may be
 													// exluded when intersection
 													// or difference
 				continue;
@@ -533,8 +534,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 			final CyNetwork net1 = networks.get(0);
 			final CyNetwork net2 = networks.get(1);
 			for (Map<CyNetwork, Set<T>> map : matchedGOList) {
-				if ((map.containsKey(net1) && !map.containsKey(net2)) ||
-						(!map.containsKey(net1) && map.containsKey(net2)))
+				if ((map.containsKey(net1) && !map.containsKey(net2))) 
 					list.add(map);
 			}
 

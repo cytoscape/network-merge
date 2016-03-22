@@ -49,6 +49,7 @@ import org.cytoscape.work.TaskMonitor;
 public class NetworkMergeTask extends AbstractTask {	
 	private final List<CyNetwork> selectedNetworkList;
 	private final Operation operation;
+	private final boolean subtractOnlyUnconnectedNodes;
 	private final AttributeConflictCollector conflictCollector;
 
 	
@@ -73,12 +74,13 @@ public class NetworkMergeTask extends AbstractTask {
 	public NetworkMergeTask(final CyNetworkFactory cnf, final CyNetworkManager networkManager,
 			final String networkName, final MatchingAttribute matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, final AttributeMapping edgeAttributeMapping,
-			final List<CyNetwork> selectedNetworkList, final Operation operation,
-			final AttributeConflictCollector conflictCollector,
+			final List<CyNetwork> selectedNetworkList, final Operation operation, 
+			final boolean subtractOnlyUnconnectedNodes, final AttributeConflictCollector conflictCollector,
 			final Map<String, Map<String, Set<String>>> selectedNetworkAttributeIDType, final String tgtType,
 			final boolean inNetworkMerge, final CreateNetworkViewTaskFactory netViewCreator) {
 		this.selectedNetworkList = selectedNetworkList;
 		this.operation = operation;
+		this.subtractOnlyUnconnectedNodes = subtractOnlyUnconnectedNodes;
 		this.conflictCollector = conflictCollector;
 		this.netViewCreator = netViewCreator;
 		this.matchingAttribute = matchingAttribute;
@@ -119,7 +121,7 @@ public class NetworkMergeTask extends AbstractTask {
 		networkMerge.setWithinNetworkMerge(inNetworkMerge);
 		
 		// Merge everything
-		networkMerge.mergeNetwork(newNetwork, selectedNetworkList, operation);
+		networkMerge.mergeNetwork(newNetwork, selectedNetworkList, operation, subtractOnlyUnconnectedNodes);
 
 		taskMonitor.setStatusMessage("Processing conflicts...");
 		// Perform conflict handling if necessary
