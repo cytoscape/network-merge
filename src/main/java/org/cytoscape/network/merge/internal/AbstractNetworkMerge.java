@@ -218,13 +218,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 	
 	private long getUniqueIdNumber(int a, int b)
 	{
-		long id;
-		if(a > b)
-			id = b | ((long) a << 32);
-		else
-			id = a | ((long) b << 32);
-		
-		return id;
+		return ((long) a << 32) | b ;
 	}
 
 	protected abstract void proprocess(CyNetwork toNetwork);
