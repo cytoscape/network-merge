@@ -84,6 +84,7 @@ public class NetworkMergeTask extends AbstractTask {
 		this.conflictCollector = conflictCollector;
 		this.netViewCreator = netViewCreator;
 		this.matchingAttribute = matchingAttribute;
+		this.inNetworkMerge = inNetworkMerge;
 		this.nodeAttributeMapping = nodeAttributeMapping;
 		this.edgeAttributeMapping = edgeAttributeMapping;
 		this.networkName = networkName;
