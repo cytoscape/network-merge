@@ -26,6 +26,7 @@ package org.cytoscape.network.merge.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Set;
@@ -33,13 +34,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 
-
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyRow;
-
 import org.cytoscape.work.TaskMonitor;
 
 /**
@@ -301,9 +300,6 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 		// merge edges
 		final double nEdge = matchedEdgeList.size();
 		
-		// Only for difference
-		final Map<String, CyNode> differenceNodeMap = new HashMap<String, CyNode>();
-		
 		for (int i = 0; i < nEdge; i++) {
 			if (interrupted)
 				return null;
@@ -331,23 +327,21 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 				
 				if(source == null) {
 					CyNode originalSource = originalEdge.getSource();
-					String name = findName(fromNetworks, originalSource);
-					source = differenceNodeMap.get(name);
-					if(source == null) {
-						source = mergedNetwork.addNode();
-						differenceNodeMap.put(name, source);
-					}
-					mergedNetwork.getRow(source).set(CyNetwork.NAME, name);
+					CyNetwork originalNetwork = findNetwork(fromNetworks, originalSource);
+					Map<CyNetwork, Set<CyNode>> mapNetNode = new HashMap<CyNetwork, Set<CyNode>>();
+					mapNetNode.put(originalNetwork, Collections.singleton(originalSource));
+					source = mergedNetwork.addNode();
+					mergeNode(mapNetNode, source, mergedNetwork);
+					mapNN.put(originalSource, source);
 				}
 				if(target == null) {
 					CyNode originalTarget = originalEdge.getTarget();
-					String name = findName(fromNetworks, originalTarget);
-					target = differenceNodeMap.get(name);
-					if(target == null) {
-						target = mergedNetwork.addNode();
-						differenceNodeMap.put(name, target);
-					}
-					mergedNetwork.getRow(target).set(CyNetwork.NAME, name);
+					CyNetwork originalNetwork = findNetwork(fromNetworks, originalTarget);
+					Map<CyNetwork, Set<CyNode>> mapNetNode = new HashMap<CyNetwork, Set<CyNode>>();
+					mapNetNode.put(originalNetwork, Collections.singleton(originalTarget));
+					target = mergedNetwork.addNode();
+					mergeNode(mapNetNode, target, mergedNetwork);
+					mapNN.put(originalTarget, target);
 				}
 			} 
 			else if (source == null || target == null) { // some of the node may be
@@ -366,19 +360,15 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 		return mergedNetwork;
 	}
 	
-	private final String findName(Collection<CyNetwork> fromNetworks, CyNode originalNode) {
-		String name = null;
-		for(CyNetwork originalNetwork: fromNetworks) {
-			if(originalNetwork.containsNode(originalNode) == false)
-				continue;
-			
-			CyRow row = originalNetwork.getRow(originalNode);
-			if(row != null) {
-				name = row.get(CyNetwork.NAME, String.class);
+	private final CyNetwork findNetwork(Collection<CyNetwork> fromNetworks, CyNode originalNode) {
+		CyNetwork originalNetwork = null;
+		for(CyNetwork network: fromNetworks) {
+			if(network.containsNode(originalNode) == true) {
+				originalNetwork = network;
 				break;
 			}
 		}
-		return name;
+		return originalNetwork;
 	}
 
 	/**
