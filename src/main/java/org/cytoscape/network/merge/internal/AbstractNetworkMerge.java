@@ -349,14 +349,20 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 				if(source == null) {
 					CyNode originalSource = originalEdge.getSource();
 					source = mergedNetwork.addNode();
-					mergeNode(differenceNodeMap.get(originalSource), source, mergedNetwork);
-					mapNN.put(originalSource, source);
+					Map<CyNetwork, Set<CyNode>> mapNetNode = differenceNodeMap.get(originalSource);
+					mergeNode(mapNetNode, source, mergedNetwork);
+					for(Set<CyNode> nodes: mapNetNode.values())
+						for(CyNode node: nodes)
+							mapNN.put(node, source);
 				}
 				if(target == null) {
 					CyNode originalTarget = originalEdge.getTarget();
 					target = mergedNetwork.addNode();
-					mergeNode(differenceNodeMap.get(originalTarget), target, mergedNetwork);
-					mapNN.put(originalTarget, target);
+					Map<CyNetwork, Set<CyNode>> mapNetNode = differenceNodeMap.get(originalTarget);
+					mergeNode(mapNetNode, target, mergedNetwork);
+					for(Set<CyNode> nodes: mapNetNode.values())
+						for(CyNode node: nodes)
+							mapNN.put(node, target);
 				}
 			} 
 			else if (source == null || target == null) { // some of the node may be
