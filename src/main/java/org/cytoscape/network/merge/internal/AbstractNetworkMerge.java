@@ -175,7 +175,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 			if(mapNodesEdges != null)
 			{
 				//System.out.println("same interaction edge: " + i1);
-				if(mapNodesEdges.get(id1) != null && mapNodesEdges.get(id2) != null && mapNodesEdges.get(id1) == mapNodesEdges.get(id2))
+				if(mapNodesEdges.get(id1) != null && mapNodesEdges.get(id2) != null && mapNodesEdges.get(id1).equals(mapNodesEdges.get(id2)))
 					index = mapNodesEdges.get(id1);
 			}
 		}
