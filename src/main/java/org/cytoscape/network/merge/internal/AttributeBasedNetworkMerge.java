@@ -129,10 +129,11 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 
 			// TODO: immutability?
 			final ColumnType type = attributeMapping.getMergedAttributeType(i);
+			final boolean isImmutable = attributeMapping.getMergedAttributeMutability(i);
 			if (type.isList()) {
-				table.createListColumn(attr, type.getType(), true);
+				table.createListColumn(attr, type.getType(), isImmutable);
 			} else {
-				table.createColumn(attr, type.getType(), true);
+				table.createColumn(attr, type.getType(), isImmutable);
 			}
 		}
 	}

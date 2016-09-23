@@ -104,6 +104,38 @@ public interface AttributeMapping {
      */
     public boolean setMergedAttributeType(String mergedAttributeName, ColumnType type);
 
+		/**
+		 * Get the mutability of the column
+		 *
+		 * @param index
+		 * @return the ith merged attribute mutability value
+		 */
+		public boolean getMergedAttributeMutability(int index);
+
+		/**
+		 * Get the mutability of the column
+		 *
+		 * @param mergedAttributeName
+		 * @return the ith merged attribute mutability value
+		 */
+		public boolean getMergedAttributeMutability(String mergedAttributeName);
+
+		/**
+		 * Set the mutability of the column
+		 *
+		 * @param index
+		 * @param isImmutable 
+		 */
+		public void setMergedAttributeMutability(int index, boolean isImmutable);
+
+		/**
+		 * Set the mutability of the column
+		 *
+		 * @param mergedAttributeName
+		 * @param isImmutable 
+		 */
+		public void setMergedAttributeMutability(String mergedAttributeName, boolean isImmutable);
+
     /**
      *
      * @param attributeName

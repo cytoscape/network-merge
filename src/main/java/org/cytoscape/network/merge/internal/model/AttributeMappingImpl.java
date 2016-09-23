@@ -50,6 +50,7 @@ public class AttributeMappingImpl implements AttributeMapping {
     private Map<CyNetwork,List<String>> attributeMapping; //attribute mapping, network to list of attributes
     private List<String> mergedAttributes;
     private List<ColumnType> mergedAttributeTypes;
+    private List<Boolean> mergedAttributeMutability;
     private Map<CyNetwork,CyTable> cyTables;
     private final String nullAttr = ""; // to hold a position in vector standing that it's not a attribute
 
@@ -57,6 +58,7 @@ public class AttributeMappingImpl implements AttributeMapping {
         attributeMapping = new WeakHashMap<CyNetwork,List<String>>();
         mergedAttributes = new ArrayList<String>();
         mergedAttributeTypes = new ArrayList<ColumnType>();
+        mergedAttributeMutability = new ArrayList<Boolean>();
         cyTables = new WeakHashMap<CyNetwork,CyTable>();
     }
 
@@ -153,6 +155,52 @@ public class AttributeMappingImpl implements AttributeMapping {
         }
 
         return setMergedAttributeType(index,type);
+    }
+
+    @Override
+    public boolean getMergedAttributeMutability(final int index) {
+        if (index>=this.getSizeMergedAttributes()||index<0)  {
+            throw new java.lang.IndexOutOfBoundsException();
+        }
+
+        return mergedAttributeMutability.get(index);
+    }
+
+    @Override
+    public boolean getMergedAttributeMutability(final String mergedAttributeName) {
+        if (mergedAttributeName==null) {
+            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
+        }
+
+        final int index = mergedAttributes.indexOf(mergedAttributeName);
+        if (index==-1) {
+            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
+        }
+
+        return getMergedAttributeMutability(index);
+    }
+
+    @Override
+    public void setMergedAttributeMutability(int index, boolean isImmutable) {
+        if (index>=this.getSizeMergedAttributes()||index<0) {
+                throw new java.lang.IndexOutOfBoundsException();
+        }
+
+        this.mergedAttributeMutability.set(index, isImmutable);
+    }
+
+    @Override
+    public void setMergedAttributeMutability(String mergedAttributeName, boolean isImmutable) {
+        if (mergedAttributeName==null) {
+            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
+        }
+
+        final int index = mergedAttributes.indexOf(mergedAttributeName);
+        if (index==-1) {
+            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
+        }
+
+        setMergedAttributeMutability(index,isImmutable);
     }
             
     @Override
@@ -319,6 +367,7 @@ public class AttributeMappingImpl implements AttributeMapping {
         }
 
         this.mergedAttributeTypes.remove(index);
+        this.mergedAttributeMutability.remove(index);
         
         return mergedAttributes.remove(index);
     }
@@ -366,6 +415,7 @@ public class AttributeMappingImpl implements AttributeMapping {
         mergedAttributes.add(index,defaultName);// add in merged attr
 
         this.resetMergedAttributeType(index, true);
+        this.resetMergedAttributeMutability(index, true);
         return defaultName;
     }
 
@@ -486,6 +536,7 @@ public class AttributeMappingImpl implements AttributeMapping {
             if (removed.get(i).compareTo(nullAttr)!=0) { // if the attribute is not empty
                 if (!pack(i)) { // if not removed
                         this.resetMergedAttributeType(i, false);
+                        this.resetMergedAttributeMutability(i, false);
                 }
             }
         }
@@ -567,6 +618,7 @@ public class AttributeMappingImpl implements AttributeMapping {
         
         mergedAttributes.add(getDefaultMergedAttrName(attrMerged)); // add in merged attr
         this.resetMergedAttributeType(mergedAttributeTypes.size(),true);
+        this.resetMergedAttributeMutability(mergedAttributeMutability.size(),true);
     }
 
     protected void resetMergedAttributeType(final int index, boolean add) {
@@ -593,6 +645,31 @@ public class AttributeMappingImpl implements AttributeMapping {
             final ColumnType old = mergedAttributeTypes.get(index);
             if (!ColumnType.isConvertable(type, old))
                 mergedAttributeTypes.set(index, type);
+        }
+    }
+
+    protected void resetMergedAttributeMutability(final int index, boolean add) {
+        if (this.getSizeMergedAttributes()>this.mergedAttributeMutability.size()+(add?1:0)) {
+                throw new java.lang.IllegalStateException("column mutability not complete");
+        }
+
+        if (index>=this.getSizeMergedAttributes()||index<0) {
+                throw new java.lang.IndexOutOfBoundsException();
+        }
+
+        Map<CyNetwork,String> map = getOriginalAttributeMap(index);
+        boolean isImmutable = true;
+        for (Map.Entry<CyNetwork,String> entry : map.entrySet()) {
+            CyTable table = cyTables.get(entry.getKey());
+            if (table.getColumn(entry.getValue()).isImmutable())
+              continue;
+            isImmutable = false;
+            break;
+        }
+        if (add) { // new
+            mergedAttributeMutability.add(index, isImmutable);
+        } else {
+            mergedAttributeMutability.set(index, isImmutable);
         }
     }
 }
