@@ -39,6 +39,14 @@ public interface NetworkMerge {
 	final ImageIcon INTERSECTION_ICON = new ImageIcon(NetworkMerge.class.getResource("/images/venn-intersection-16.png"));
 	final ImageIcon DIFFERENCE_ICON = new ImageIcon(NetworkMerge.class.getResource("/images/venn-difference-16.png"));
 	
+	public static Operation lookup(String s)
+	{
+		if ("Union".equalsIgnoreCase(s))  return Operation.UNION;
+		if ("Intersection".equalsIgnoreCase(s))  return Operation.INTERSECTION;
+		if ("Difference".equalsIgnoreCase(s))  return Operation.DIFFERENCE;
+		return Operation.UNION;
+	}
+	
 	public enum Operation {
 		UNION("Union", UNION_ICON),
 		INTERSECTION("Intersection", INTERSECTION_ICON),

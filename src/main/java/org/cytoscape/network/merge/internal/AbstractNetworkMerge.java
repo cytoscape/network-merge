@@ -231,6 +231,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 		if (mergedNetwork == null) { 
 			throw new NullPointerException("Merged networks wasn't created.");
 		}
+		System.out.println("mergeNetwork");
 		if (fromNetworks == null) {
 			throw new NullPointerException("No networks selected.");
 		}

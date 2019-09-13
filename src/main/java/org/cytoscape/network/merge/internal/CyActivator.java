@@ -1,5 +1,12 @@
 package org.cytoscape.network.merge.internal;
 
+import static org.cytoscape.work.ServiceProperties.COMMAND;
+import static org.cytoscape.work.ServiceProperties.COMMAND_DESCRIPTION;
+import static org.cytoscape.work.ServiceProperties.COMMAND_EXAMPLE_JSON;
+import static org.cytoscape.work.ServiceProperties.COMMAND_LONG_DESCRIPTION;
+import static org.cytoscape.work.ServiceProperties.COMMAND_NAMESPACE;
+import static org.cytoscape.work.ServiceProperties.COMMAND_SUPPORTS_JSON;
+
 /*
  * #%L
  * Cytoscape Merge Impl (network-merge-impl)
@@ -31,12 +38,16 @@ import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
+import org.cytoscape.network.merge.internal.task.NetworkMergeCommandTaskFactory;
+import org.cytoscape.network.merge.internal.task.VersionTaskFactory;
 import org.cytoscape.service.util.AbstractCyActivator;
+import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
 import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.work.ServiceProperties;
+import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.swing.DialogTaskManager;
 import org.osgi.framework.BundleContext;
 
@@ -62,8 +73,39 @@ public class CyActivator extends AbstractCyActivator {
 				cyNetworkManagerServiceRef, cyNetworkViewManagerServiceRef, cyNetworkFactoryServiceRef, cyNetworkNamingServiceRef,
 				taskManagerServiceRef, iconManagerServiceRef, netViewCreator);
 
-		final Properties props = new Properties();
+		Properties props = new Properties();
 		props.setProperty(ServiceProperties.ID, "networkMergeAction");
 		registerService(bc, networkMergeAction, CyAction.class, props); 
+	
+		
+		
+        String version = "3.4.0";
+        VersionTaskFactory versionTask = new VersionTaskFactory(version);
+		props = new Properties();
+		props.setProperty(COMMAND_NAMESPACE, "aamerge");
+		props.setProperty(COMMAND, "version");
+		props.setProperty(COMMAND_DESCRIPTION, "Show version");
+		props.setProperty(COMMAND_LONG_DESCRIPTION, "Display the version of the merge app.");
+		props.setProperty(COMMAND_SUPPORTS_JSON, "true");
+		props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"3.4.0\"}");
+		registerService(bc, versionTask, TaskFactory.class, props); 
+		
+		
+		
+        final CyServiceRegistrar registrar = getService(bc, CyServiceRegistrar.class);
+        final CySwingApplication desktop = getService(bc, CySwingApplication.class);
+		final MergeManager manager = new MergeManager(registrar, desktop);		
+
+		NetworkMergeCommandTaskFactory mergeTask = new NetworkMergeCommandTaskFactory(registrar, desktop, manager);
+		props = new Properties();
+		props.setProperty(COMMAND_NAMESPACE, "aamerge");
+		props.setProperty(COMMAND, "merge");
+		props.setProperty(COMMAND_DESCRIPTION, "Merge two or more networks");
+		props.setProperty(COMMAND_LONG_DESCRIPTION, "Combine networks via union, intersection, or difference.  Lots of parameters apply!");
+		props.setProperty(COMMAND_SUPPORTS_JSON, "true");
+		props.setProperty(COMMAND_EXAMPLE_JSON, "{\"dummy_id(?)\":\"12345\"}");
+		registerService(bc, mergeTask, TaskFactory.class, props); 
+		
+			
 	}
 }

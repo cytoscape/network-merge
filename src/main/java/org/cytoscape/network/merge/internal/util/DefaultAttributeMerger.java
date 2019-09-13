@@ -73,7 +73,8 @@ public class DefaultAttributeMerger implements AttributeMerger {
 					// the same, do nothing
 				} else { // attribute conflict
 					// add to conflict collector
-					conflictCollector.addConflict(from, fromColumn, graphObject, column);
+					if (conflictCollector != null)
+						conflictCollector.addConflict(from, fromColumn, graphObject, column);
 				}
 			} else if (!colType.isList()) { // simple type (Integer, Long,
 											// Double, Boolean)
@@ -91,7 +92,8 @@ public class DefaultAttributeMerger implements AttributeMerger {
 				} else { // attribute conflict
 
 					// add to conflict collector
-					conflictCollector.addConflict(from, fromColumn, graphObject, column);
+					if (conflictCollector != null)
+						conflictCollector.addConflict(from, fromColumn, graphObject, column);
 					// continue;
 				}
 			} else { // toattr is list type

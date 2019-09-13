@@ -3,17 +3,16 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.cytoscape</groupId>
-	<artifactId>network-merge</artifactId>
-	<version>3.3.4</version>
+	<artifactId>merge</artifactId>
+	<version>3.4.0</version>
 	<packaging>bundle</packaging>
-
-	<name>Network Merge</name>
+	<name>Merge</name>
 
 	<properties>
-		<bundle.symbolicName>org.cytoscape.network-merge</bundle.symbolicName>
+		<bundle.symbolicName>org.cytoscape.merge</bundle.symbolicName>
 		<bundle.namespace>org.cytoscape.network.merge.internal</bundle.namespace>
 
-		<cytoscape.api.version>3.3.0</cytoscape.api.version>
+		<cytoscape.api.version>3.7.0</cytoscape.api.version>
 		<osgi.api.version>4.2.0</osgi.api.version>
 
 		<!-- Maven Plugin Settings -->
@@ -115,6 +114,7 @@
 		</plugins>
 	</build>
 
+
 	<dependencies>
 		<dependency>
 			<groupId>org.ops4j.pax.logging</groupId>
@@ -122,13 +122,16 @@
 			<version>1.5.2</version>
 			<scope>provided</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
 			<version>${osgi.api.version}</version>
 			<scope>provided</scope>
 		</dependency>
-
+		
+		<!-- Cytoscape API dependencies -->
+		
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>model-api</artifactId>
@@ -137,17 +140,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
-			<artifactId>session-api</artifactId>
+			<artifactId>core-task-api</artifactId>
 			<version>${cytoscape.api.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.cytoscape</groupId>
-			<artifactId>viewmodel-api</artifactId>
-			<version>${cytoscape.api.version}</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
+			<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>swing-application-api</artifactId>
 			<version>${cytoscape.api.version}</version>
@@ -158,18 +155,27 @@
 			<artifactId>swing-util-api</artifactId>
 			<version>${cytoscape.api.version}</version>
 			<scope>provided</scope>
-		</dependency>
+		</dependency>		
+		
 		<dependency>
 			<groupId>org.cytoscape</groupId>
-			<artifactId>core-task-api</artifactId>
+			<artifactId>command-executor-api</artifactId>
 			<version>${cytoscape.api.version}</version>
 			<scope>provided</scope>
-		</dependency>
+		</dependency>	
+			
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>io-api</artifactId>
 			<version>${cytoscape.api.version}</version>
-			<scope>provided</scope>
+			<scope>provided</scope>	
+		</dependency>	
+		
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
