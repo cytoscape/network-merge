@@ -83,7 +83,11 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 			final AttributeMerger attributeMerger, AttributeValueMatcher attributeValueMatcher,
 			final TaskMonitor taskMonitor) {
 		super(taskMonitor);
-
+		System.out.println("matchingAttribute:" + matchingAttribute);
+		System.out.println("nodeAttributeMapping:" + nodeAttributeMapping);
+		System.out.println("edgeAttributeMapping:" + edgeAttributeMapping);
+		System.out.println("attributeMerger:" + attributeMerger);
+		System.out.println("attributeValueMatcher:" + attributeValueMatcher);
 		if (matchingAttribute == null || nodeAttributeMapping == null || edgeAttributeMapping == null
 				|| attributeMerger == null || attributeValueMatcher == null) {
 			throw new java.lang.NullPointerException();

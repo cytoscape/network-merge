@@ -131,7 +131,7 @@ public class NetworkMergeDialog extends JDialog {
 	private JButton okBtn;
 	
 	private final TreeMap<Operation, AbstractButton> operationButtons;
-	private Map<String, Map<String, Set<String>>> selectedNetAttrIDType;
+//	private Map<String, Map<String, Set<String>>> selectedNetAttrIDType;
 	
 	private final AttributeMapping nodeAttrMapping;
 	private final AttributeMapping edgeAttrMapping;
@@ -831,7 +831,7 @@ public class NetworkMergeDialog extends JDialog {
 					// Network merge task
 					final NetworkMergeTask nmTask = new NetworkMergeTask(cnf, cnm, netName, matchingAttr,
 							nodeAttrMapping, edgeAttrMapping, selectedNetData.getNetworkList(),
-							getOperation(), getDifference1Btn().isSelected(), conflictCollector, selectedNetAttrIDType, tgtType,
+							getOperation(), getDifference1Btn().isSelected(), conflictCollector, tgtType,   //, selectedNetAttrIDType
 							getInNetMergeCkb().isSelected(), netViewCreator);
 
 					final TaskIterator ti = new TaskIterator(nmTask);

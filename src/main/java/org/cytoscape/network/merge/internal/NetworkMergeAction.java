@@ -29,6 +29,7 @@ import java.awt.event.ActionEvent;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.AbstractCyAction;
+import org.cytoscape.application.swing.ActionEnableSupport;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -59,7 +60,7 @@ public class NetworkMergeAction extends AbstractCyAction {
 	public NetworkMergeAction(CySwingApplication swingApp, CyApplicationManager cam, CyNetworkManager cnm,
 			CyNetworkViewManager cnvm, CyNetworkFactory cnf, CyNetworkNaming cnn, TaskManager taskManager,
 			IconManager iconMgr, CreateNetworkViewTaskFactory netViewCreator) {
-		super(APP_MENU_TITLE, cam, "network", cnvm);
+		super(APP_MENU_TITLE, cam, ActionEnableSupport.ENABLE_FOR_ALWAYS, cnvm);
 		setPreferredMenu(PARENT_MENU);
 		setMenuGravity((float)0.0);
 		

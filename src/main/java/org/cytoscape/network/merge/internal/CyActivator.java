@@ -93,12 +93,10 @@ public class CyActivator extends AbstractCyActivator {
 		
 		
         final CyServiceRegistrar registrar = getService(bc, CyServiceRegistrar.class);
-        final CySwingApplication desktop = getService(bc, CySwingApplication.class);
-		final MergeManager manager = new MergeManager(registrar, desktop);		
 
-		NetworkMergeCommandTaskFactory mergeTask = new NetworkMergeCommandTaskFactory(registrar, desktop, manager);
+		NetworkMergeCommandTaskFactory mergeTask = new NetworkMergeCommandTaskFactory(registrar);
 		props = new Properties();
-		props.setProperty(COMMAND_NAMESPACE, "aamerge");
+		props.setProperty(COMMAND_NAMESPACE, "network");
 		props.setProperty(COMMAND, "merge");
 		props.setProperty(COMMAND_DESCRIPTION, "Merge two or more networks");
 		props.setProperty(COMMAND_LONG_DESCRIPTION, "Combine networks via union, intersection, or difference.  Lots of parameters apply!");

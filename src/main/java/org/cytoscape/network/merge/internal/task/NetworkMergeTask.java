@@ -71,13 +71,20 @@ public class NetworkMergeTask extends AbstractTask {
 	 * Constructor.<br>
 	 * 
 	 */
-	public NetworkMergeTask(final CyNetworkFactory cnf, final CyNetworkManager networkManager,
-			final String networkName, final MatchingAttribute matchingAttribute,
-			final AttributeMapping nodeAttributeMapping, final AttributeMapping edgeAttributeMapping,
-			final List<CyNetwork> selectedNetworkList, final Operation operation, 
-			final boolean subtractOnlyUnconnectedNodes, final AttributeConflictCollector conflictCollector,
-			final Map<String, Map<String, Set<String>>> selectedNetworkAttributeIDType, final String tgtType,
-			final boolean inNetworkMerge, final CreateNetworkViewTaskFactory netViewCreator) {
+	public NetworkMergeTask(final CyNetworkFactory cnf, 
+			final CyNetworkManager networkManager,
+			final String networkName, 
+			final MatchingAttribute matchingAttribute,
+			final AttributeMapping nodeAttributeMapping, 
+			final AttributeMapping edgeAttributeMapping,
+			final List<CyNetwork> selectedNetworkList, 
+			final Operation operation, 
+			final boolean subtractOnlyUnconnectedNodes, 
+			final AttributeConflictCollector conflictCollector,
+			final String tgtType,   //final Map<String, Map<String, Set<String>>> selectedNetworkAttributeIDType,
+			final boolean inNetworkMerge, 
+			final CreateNetworkViewTaskFactory netViewCreator) 
+	{
 		this.selectedNetworkList = selectedNetworkList;
 		this.operation = operation;
 		this.subtractOnlyUnconnectedNodes = subtractOnlyUnconnectedNodes;
@@ -114,11 +121,16 @@ public class NetworkMergeTask extends AbstractTask {
 		networkManager.addNetwork(newNetwork);
 		
 		taskMonitor.setStatusMessage("Merging networks...");
-		final AttributeValueMatcher attributeValueMatcher = new DefaultAttributeValueMatcher();
 		final AttributeMerger attributeMerger = new DefaultAttributeMerger(conflictCollector);
+		final AttributeValueMatcher attributeValueMatcher = new DefaultAttributeValueMatcher();
 
-		this.networkMerge = new AttributeBasedNetworkMerge(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping,
-				attributeMerger, attributeValueMatcher, taskMonitor);
+		this.networkMerge = new AttributeBasedNetworkMerge(
+				matchingAttribute, 
+				nodeAttributeMapping, 
+				edgeAttributeMapping,
+				attributeMerger, 
+				attributeValueMatcher, 
+				taskMonitor);
 		networkMerge.setWithinNetworkMerge(inNetworkMerge);
 		
 		// Merge everything
@@ -126,7 +138,7 @@ public class NetworkMergeTask extends AbstractTask {
 
 		taskMonitor.setStatusMessage("Processing conflicts...");
 		// Perform conflict handling if necessary
-		if (!conflictCollector.isEmpty() && !cancelled) {
+		if (conflictCollector != null && !conflictCollector.isEmpty() && !cancelled) {
 			HandleConflictsTask hcTask = new HandleConflictsTask(conflictCollector);
 			insertTasksAfterCurrentTask(hcTask);
 		}
