@@ -2,7 +2,24 @@
 
 ## Introduction
 
-This is a Cytoscape Core App for merging networks.
+This is a Cytoscape Core App for merging networks.  It can now be run by scripts.  
+
+Here is the example:
+
+<code>
+{ 
+"namespace" : "network", 
+"operation" : "union", 
+"sources" : "galFiltered.sif, galFiltered.sif(1), galFiltered.sif(2)" , 
+"keys" : "COMMON,  gal1RGexp, Degree"  , 
+"edgeKeys" : "interaction"  , 
+"retainPosition" : "true",
+"nodesOnly" : "true",
+"ignoreDirection" : "false"
+}
+</code>
+
+
 
 ## How to build
 
