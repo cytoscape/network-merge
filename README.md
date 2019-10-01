@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is a Cytoscape Core App for merging networks.
+This is a Cytoscape Core App for merging networks
 
 ## How to build
 
