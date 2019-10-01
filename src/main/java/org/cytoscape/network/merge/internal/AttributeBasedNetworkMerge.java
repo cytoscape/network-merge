@@ -63,35 +63,40 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	 * @param edgeAttributeMapping
 	 * @param attributeMerger
 	 */
-	public AttributeBasedNetworkMerge(final MatchingAttribute matchingAttribute,
-			final AttributeMapping nodeAttributeMapping, final AttributeMapping edgeAttributeMapping,
-			final AttributeMerger attributeMerger, final TaskMonitor taskMonitor) {
+	public AttributeBasedNetworkMerge(
+			final MatchingAttribute matchingAttribute,
+			final AttributeMapping nodeAttributeMapping, 
+			final AttributeMapping edgeAttributeMapping,
+			final AttributeMerger attributeMerger, 
+			final TaskMonitor taskMonitor) {
+		
 		this(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping, attributeMerger,
 				new DefaultAttributeValueMatcher(), taskMonitor);
 	}
 
 	/**
 	 * 
-	 * @param matchingAttribute
+	 * @param matchingAttribute  -- a map of network to column
 	 * @param nodeAttributeMapping
 	 * @param edgeAttributeMapping
 	 * @param attributeMerger
 	 * @param attributeValueMatcher
 	 */
-	public AttributeBasedNetworkMerge(final MatchingAttribute matchingAttribute,
-			final AttributeMapping nodeAttributeMapping, final AttributeMapping edgeAttributeMapping,
-			final AttributeMerger attributeMerger, AttributeValueMatcher attributeValueMatcher,
+	public AttributeBasedNetworkMerge(
+			final MatchingAttribute matchingAttribute,
+			final AttributeMapping nodeAttributeMapping, 
+			final AttributeMapping edgeAttributeMapping,
+			final AttributeMerger attributeMerger, 
+			AttributeValueMatcher attributeValueMatcher,
 			final TaskMonitor taskMonitor) {
 		super(taskMonitor);
-		System.out.println("matchingAttribute:" + matchingAttribute);
-		System.out.println("nodeAttributeMapping:" + nodeAttributeMapping);
-		System.out.println("edgeAttributeMapping:" + edgeAttributeMapping);
-		System.out.println("attributeMerger:" + attributeMerger);
-		System.out.println("attributeValueMatcher:" + attributeValueMatcher);
-		if (matchingAttribute == null || nodeAttributeMapping == null || edgeAttributeMapping == null
-				|| attributeMerger == null || attributeValueMatcher == null) {
-			throw new java.lang.NullPointerException();
-		}
+
+		if (matchingAttribute == null) 		throw new java.lang.NullPointerException("matchingAttribute");
+		if (nodeAttributeMapping == null) 	throw new java.lang.NullPointerException("nodeAttributeMapping");
+		if (edgeAttributeMapping == null) 	throw new java.lang.NullPointerException("edgeAttributeMapping");
+		if (attributeMerger == null) 		throw new java.lang.NullPointerException("attributeMerger");
+		if (attributeValueMatcher == null) 	throw new java.lang.NullPointerException("attributeValueMatcher");
+		
 		this.matchingAttribute = matchingAttribute;
 		this.nodeAttributeMapping = nodeAttributeMapping;
 		this.edgeAttributeMapping = edgeAttributeMapping;

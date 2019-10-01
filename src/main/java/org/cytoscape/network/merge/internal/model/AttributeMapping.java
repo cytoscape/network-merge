@@ -34,7 +34,7 @@ import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.util.ColumnType;
 
 /**
- * Instore the information how to mapping the attributes 
+ * Store the information how to map the attributes 
  * in the original networks to those in the resulting networks
  * 
  * 
@@ -67,7 +67,7 @@ public interface AttributeMapping {
     public String getMergedAttribute(int index);
 
     /**
-     * Set the ith attribute name in the merged network
+     * Set the i-th attribute name in the merged network
      * @param index
      * @param attributeName
      * @return the original one

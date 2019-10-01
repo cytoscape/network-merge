@@ -82,8 +82,8 @@ public class CyActivator extends AbstractCyActivator {
         String version = "3.4.0";
         VersionTaskFactory versionTask = new VersionTaskFactory(version);
 		props = new Properties();
-		props.setProperty(COMMAND_NAMESPACE, "aamerge");
-		props.setProperty(COMMAND, "version");
+		props.setProperty(COMMAND_NAMESPACE, "network");
+		props.setProperty(COMMAND, "merge.version");
 		props.setProperty(COMMAND_DESCRIPTION, "Show version");
 		props.setProperty(COMMAND_LONG_DESCRIPTION, "Display the version of the merge app.");
 		props.setProperty(COMMAND_SUPPORTS_JSON, "true");
@@ -101,7 +101,7 @@ public class CyActivator extends AbstractCyActivator {
 		props.setProperty(COMMAND_DESCRIPTION, "Merge two or more networks");
 		props.setProperty(COMMAND_LONG_DESCRIPTION, "Combine networks via union, intersection, or difference.  Lots of parameters apply!");
 		props.setProperty(COMMAND_SUPPORTS_JSON, "true");
-		props.setProperty(COMMAND_EXAMPLE_JSON, "{\"dummy_id(?)\":\"12345\"}");
+		props.setProperty(COMMAND_EXAMPLE_JSON, "{\"Merged Table\":\"12345\"}");
 		registerService(bc, mergeTask, TaskFactory.class, props); 
 		
 			

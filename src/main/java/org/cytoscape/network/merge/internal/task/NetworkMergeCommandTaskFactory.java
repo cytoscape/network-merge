@@ -7,13 +7,9 @@ import org.cytoscape.work.TaskIterator;
 public class NetworkMergeCommandTaskFactory implements TaskFactory {
 
 	final CyServiceRegistrar registrar;
-//	final CySwingApplication application;
-//	final MergeManager merge;
 
-	public NetworkMergeCommandTaskFactory(CyServiceRegistrar reg) {  //, CySwingApplication app, MergeManager mrg
+	public NetworkMergeCommandTaskFactory(CyServiceRegistrar reg) {  
 		registrar = reg;
-//		application = app;
-//		merge = mrg;
 	}
 
 	public boolean isReady() {

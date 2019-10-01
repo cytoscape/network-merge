@@ -36,11 +36,11 @@ import org.cytoscape.work.json.JSONResult;
 public class NetworkMergeCommandTask extends AbstractTask implements ObservableTask {
 
 	@ContainsTunables
-	@Tunable(description="Network", context="nogui", longDescription="The name of the resultant network", exampleStringValue=StringToModel.CY_NETWORK_EXAMPLE_STRING)
-	public CyNetwork network;
+//	@Tunable(description="Network", context="nogui", longDescription="The name of the resultant network", exampleStringValue=StringToModel.CY_NETWORK_EXAMPLE_STRING)
+//	public CyNetwork network;
 
-	@Tunable (description="Namespace for table", context="nogui", longDescription="A syntactic prefix used to differentiate the table from others that may contain the same columns.")
-	public String namespace = "network";
+//	@Tunable (description="Namespace for table", context="nogui", longDescription="A syntactic prefix used to differentiate the table from others that may contain the same columns.")
+//	public String namespace = "a OR b";
 
 //	  @Tunable(
 //				description = "NetworkList", context= Tunable.NOGUI_CONTEXT,
@@ -59,34 +59,34 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		@Tunable(
 				description="Source Networks", context="nogui", 
 				longDescription="The names of the input network", 
-				exampleStringValue=StringToModel.CY_NETWORK_EXAMPLE_STRING)
+				exampleStringValue="a, b")
 		public String sources;
-
-		@Tunable(
-				description="List Source Networks", context="nogui", 
-				longDescription="A list of the names of the input network", 
-				exampleStringValue=StringToModel.CY_NETWORK_EXAMPLE_STRING)
-		public List<String> sourceList;
-
-		@Tunable(
-				description="Array Source Networks", context="nogui", 
-				longDescription="An array of the names of the input network", 
-				exampleStringValue="[ \"a\", \"b\", \"c\" ]")
-		public String[] sourceArray;
-
+//
+//		@Tunable(
+//				description="List Source Networks", context="nogui", 
+//				longDescription="A list of the names of the input network", 
+//				exampleStringValue=StringToModel.CY_NETWORK_EXAMPLE_STRING)
+//		public List<String> sourceList;
+//
+//		@Tunable(
+//				description="Array Source Networks", context="nogui", 
+//				longDescription="An array of the names of the input network", 
+//				exampleStringValue="[ \"a\", \"b\" ]")
+//		public String[] sourceArray;
+//
 
 	@Tunable(
-			description = "Key Columns", context= Tunable.NOGUI_CONTEXT,
-			longDescription="The list of columns needed to match across source networks", 
-			exampleStringValue = "[ \"name\" , \"gender\" ]"
+			description = "Node Columns", context= Tunable.NOGUI_CONTEXT,
+			longDescription="The list of node attributes needed to match across source networks", 
+			exampleStringValue = "name , shared name, Betweenness"
 	)
-public  String keys;
+public  String nodeKeys;
 
   
 	@Tunable(
 			description = "Edge Key Columns", context= Tunable.NOGUI_CONTEXT,
-			longDescription="The list of columns needed to match edges across source networks", 
-			exampleStringValue = "[ \"promotes\" , \"inhibits\" ]"
+			longDescription="The list of edge attributes needed to match edges across source networks", 
+			exampleStringValue = "interaction"
 	)
 public  String edgeKeys;
 
@@ -115,54 +115,59 @@ public  String edgeKeys;
 	  
 	//--------------------------------------------------------------------------------------
 	private CyServiceRegistrar registrar;
-//	private CySwingApplication application;
-//	private MergeManager merge;
 
 	
-	public NetworkMergeCommandTask(CyServiceRegistrar reg) {		//, CySwingApplication app, MergeManager mrg
+	public NetworkMergeCommandTask(CyServiceRegistrar reg) {	
 		registrar = reg;
-//		application = app;
-//		merge = mrg;
 	}
 
+	public static boolean verbose = true;
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
 
-		System.out.println("run6");
+		if (verbose) System.out.println("run6");
 
 		CyNetworkNaming cyNetworkNaming = registrar.getService(CyNetworkNaming.class);
 		CyNetworkFactory cyNetworkFactory = registrar.getService(CyNetworkFactory.class);
 		CreateNetworkViewTaskFactory netViewCreator = registrar.getService(CreateNetworkViewTaskFactory.class);
 		CyNetworkManager cnm = registrar.getService(CyNetworkManager.class);
 
-		final String netName = cyNetworkNaming.getSuggestedNetworkTitle("Merged Table");
 		
-	
-//		if (network == null) 
-//		{
-//			network = cnm.getNetworkSet().iterator().next();
-//			matchingAttribute.addNetwork(network);
-//		}
-		
-		
-		
-		dumpInfo();
-		
-		
+		if (verbose) dumpInfo();
+		final String netName = cyNetworkNaming.getSuggestedNetworkTitle(operation + ": " + sources);
+
 		List<CyNetwork> networkList = buildNetworkList(cnm);
-		List<String> columnNames = parseKeys(keys);
+		if (networkList.size() < 2)
+		{
+			if (verbose) 
+				System.err.println("networkList.size() < 2" );
+			return;
+		}
+
+		List<String> columnNames = parseKeys(nodeKeys);
 		MatchingAttribute matchingAttribute = new MatchingAttributeImpl();
 		for (CyNetwork net : networkList)
 		{
 			matchingAttribute.addNetwork(net);
-			for (String col : columnNames)
+		}
+		for (String col : columnNames)
+		{
+			boolean found = true;
+			for (CyNetwork net : networkList)
 			{
 				CyColumn column = net.getDefaultNodeTable().getColumn(col);
-				if (column != null)
+				if (column == null)  found = false;
+			}
+			if (found)
+			{
+				for (CyNetwork net : networkList)
 				{
+					CyColumn column = net.getDefaultNodeTable().getColumn(col);
 					matchingAttribute.putAttributeForMatching(net, column);
-					System.out.println("Match: " + getNetworkName(net) + " - " + column.getName());
+					
 				}
+				if (verbose) 
+					System.out.println("Matched: " + col);
 			}
 		}
 
@@ -176,7 +181,6 @@ public  String edgeKeys;
 		//edgeColumns="{n1 col,n2 col,merged net col,merged net col type},{...}" #n+2
 
 		String tgtType = "";
-
 		final TaskManager<?, ?> taskMgr = registrar.getService(SynchronousTaskManager.class);
 		final NetworkMergeTask nmTask = new NetworkMergeTask(cyNetworkFactory, cnm, netName, matchingAttribute,
 				nodeAttributeMapping, edgeAttributeMapping, networkList, op, useDiference, null, 
@@ -204,28 +208,34 @@ public  String edgeKeys;
 	}
 
 	private List<CyNetwork> buildNetworkList(CyNetworkManager cnm) {
-		System.out.println("buildNetworkList ");
+		if (verbose) System.out.println("buildNetworkList ");
 		Set<CyNetwork> sessionNets = cnm.getNetworkSet();
 		List<CyNetwork> networkList = new ArrayList<CyNetwork>();
-		if (sourceList == null)
-		{
-			sourceList = new ArrayList<String>();
-			String[] strs = sources.split(",");
-			for (String str : strs)
-				sourceList.add(str.trim());
-		}
-		
-//		System.out.println("sourceList: ");
-//		for (String str : sourceList)
-//			System.out.println(str);
+		List<String> sourceList = new ArrayList<String>();
+		String[] strs = sources.split(",");
+		for (String str : strs)
+			sourceList.add(str.trim());
 			
-//		System.out.println("buildNetworkList2 ");
+		if (verbose) 
+		{
+			System.out.println("sources: ");
+			for (String str : sourceList)
+				System.out.println(str);
+		}
+
 		for (CyNetwork net : sessionNets)
 		{
 			String netName = getNetworkName(net);
 			if (sourceList.contains(netName))
+			{
 				networkList.add(net);
+				if (verbose) System.out.println("net found: " + netName);
+
+			}
+			else if (verbose) System.out.println("net not found: " + netName);
+				
 		}
+		 if (verbose) System.out.println("networkList size: " + networkList.size());
 		return networkList;
 	}
 
@@ -257,33 +267,33 @@ public  String edgeKeys;
 	}
 
 	private void dumpInfo() {
-		System.out.println("namespace: " + namespace);
+//		System.out.println("namespace: " + namespace);
 //		System.out.println("id: " + network.getSUID());
 		System.out.println("sources: " + sources);
-		System.out.print("sourceList: <");
-		if (sourceList != null)
-		{
-			for (String s: sourceList)
-				System.out.print(s + ": ");
-			System.out.println("> ");
-		}
-		else System.out.println("NULL>");
+//		System.out.print("sourceList: <");
+//		if (sourceList != null)
+//		{
+//			for (String s: sourceList)
+//				System.out.print(s + ": ");
+//			System.out.println("> ");
+//		}
+//		else System.out.println("NULL>");
 		
-		System.out.print("sourceArray: [");
-		if (sourceArray != null)
-		{
-			for (String s: sourceArray)
-				System.out.print(s + ": ");
-			System.out.println("] ");
-		}
-		else System.out.println("NULL]");
+//		System.out.print("sourceArray: [");
+//		if (sourceArray != null)
+//		{
+//			for (String s: sourceArray)
+//				System.out.print(s + ": ");
+//			System.out.println("] ");
+//		}
+//		else System.out.println("NULL]");
 		
-		System.out.println("keys: " + keys);
+		System.out.println("keys: " + nodeKeys);
 		System.out.println("edgeKeys: " + edgeKeys);
 		System.out.println("operation: " + operation);
 		System.out.println("retainPosition: " + (retainPosition ? "T" : "F"));
 		System.out.println("nodesOnly: " + (nodesOnly ? "T" : "F"));
-		System.out.println("ignoreDirection: " + (ignoreDirection ? "T" : "F"));
+		System.out.println("ignoreDirection: " + (ignoreDirection ? "T" : "F") + "\n\n");
 	}
 
 	@Override
