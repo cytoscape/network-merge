@@ -50,7 +50,7 @@ public class DefaultAttributeMerger implements AttributeMerger {
 	@Override
 	public <T extends CyIdentifiable> void mergeAttribute(final Map<T, CyColumn> mapGOAttr, final T graphObject, final CyColumn column,
 			final CyNetwork network) {
-		if ((mapGOAttr == null) || (graphObject == null) || (column == null))
+		if ((mapGOAttr == null) || (graphObject == null) || (column == null) || (network == null))
 			throw new java.lang.IllegalArgumentException("Required parameters cannot be null.");
 
 		final CyRow cyRow = network.getRow(graphObject);

@@ -3,10 +3,10 @@ package org.cytoscape.network.merge.internal.task;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.cytoscape.command.StringToModel;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
@@ -18,6 +18,7 @@ import org.cytoscape.network.merge.internal.model.AttributeMapping;
 import org.cytoscape.network.merge.internal.model.AttributeMappingImpl;
 import org.cytoscape.network.merge.internal.model.MatchingAttribute;
 import org.cytoscape.network.merge.internal.model.MatchingAttributeImpl;
+import org.cytoscape.network.merge.internal.util.ColumnType;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
@@ -75,20 +76,36 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 //		public String[] sourceArray;
 //
 
-	@Tunable(
-			description = "Node Columns", context= Tunable.NOGUI_CONTEXT,
-			longDescription="The list of node attributes needed to match across source networks", 
-			exampleStringValue = "name , shared name, Betweenness"
-	)
-public  String nodeKeys;
+		@Tunable(
+				description = "Node Columns", context= Tunable.NOGUI_CONTEXT,
+				longDescription="The list of node attributes needed to match across source networks", 
+				exampleStringValue = "name , shared name, Betweenness"
+		)
+	public  String nodeKeys;
 
-  
+		@Tunable(
+				description = "Node Merge Map", context= Tunable.NOGUI_CONTEXT,
+				longDescription="A list of column merge records, each containing a list of column names corresponding to the network list", 
+				exampleStringValue = "{name,display name, mergedName,String}, {COMMON, COMMON, COMMON, String}"
+		)
+	public  String nodeMergeMap;
+
+		//nodeColumns="{display name,name,new display,String},{...}" #n+2
+		//edgeColumns="{n1 col,n2 col,merged net col,merged net col type},{...}" #n+2
+
 	@Tunable(
 			description = "Edge Key Columns", context= Tunable.NOGUI_CONTEXT,
 			longDescription="The list of edge attributes needed to match edges across source networks", 
 			exampleStringValue = "interaction"
 	)
-public  String edgeKeys;
+	public  String edgeKeys;
+
+	@Tunable(
+			description = "Edge Merge Map", context= Tunable.NOGUI_CONTEXT,
+			longDescription="A list of column merge records, each containing a list of column names from the edge table corresponding to the network list", 
+			exampleStringValue = "{interaction, shared interaction, relation , String},{name, name, name, String},{EdgeBetweenness, EdgeBetweenness, Betweenness, String}"
+	)
+	public  String edgeMergeMap;
 
   
 	@Tunable(
@@ -116,6 +133,8 @@ public  String edgeKeys;
 	//--------------------------------------------------------------------------------------
 	private CyServiceRegistrar registrar;
 
+	List<CyNetwork> networkList;
+	List<String> columnNames;
 	
 	public NetworkMergeCommandTask(CyServiceRegistrar reg) {	
 		registrar = reg;
@@ -136,7 +155,7 @@ public  String edgeKeys;
 		if (verbose) dumpInfo();
 		final String netName = cyNetworkNaming.getSuggestedNetworkTitle(operation + ": " + sources);
 
-		List<CyNetwork> networkList = buildNetworkList(cnm);
+		networkList = buildNetworkList(cnm);
 		if (networkList.size() < 2)
 		{
 			if (verbose) 
@@ -144,33 +163,10 @@ public  String edgeKeys;
 			return;
 		}
 
-		List<String> columnNames = parseKeys(nodeKeys);
-		MatchingAttribute matchingAttribute = new MatchingAttributeImpl();
-		for (CyNetwork net : networkList)
-		{
-			matchingAttribute.addNetwork(net);
-		}
-		for (String col : columnNames)
-		{
-			boolean found = true;
-			for (CyNetwork net : networkList)
-			{
-				CyColumn column = net.getDefaultNodeTable().getColumn(col);
-				if (column == null)  found = false;
-			}
-			if (found)
-			{
-				for (CyNetwork net : networkList)
-				{
-					CyColumn column = net.getDefaultNodeTable().getColumn(col);
-					matchingAttribute.putAttributeForMatching(net, column);
-					
-				}
-				if (verbose) 
-					System.out.println("Matched: " + col);
-			}
-		}
-
+		columnNames = parseKeys(nodeKeys);
+		
+		MatchingAttribute matchingAttribute = buildMatchingAttribute();
+	
 		AttributeMapping nodeAttributeMapping = buildNodeAttributeMapping();
 		AttributeMapping edgeAttributeMapping = buildEdgeAttributeMapping();
 		final NetworkMerge.Operation op = NetworkMerge.lookup(operation);
@@ -179,7 +175,8 @@ public  String edgeKeys;
 
 		//nodeColumns="{display name,name,new display,String},{...}" #n+2
 		//edgeColumns="{n1 col,n2 col,merged net col,merged net col type},{...}" #n+2
-
+		
+		
 		String tgtType = "";
 		final TaskManager<?, ?> taskMgr = registrar.getService(SynchronousTaskManager.class);
 		final NetworkMergeTask nmTask = new NetworkMergeTask(cyNetworkFactory, cnm, netName, matchingAttribute,
@@ -197,6 +194,34 @@ public  String edgeKeys;
 	        public void allFinished(FinishStatus status) { }
 	 });	
 	 
+	}
+
+	private MatchingAttribute buildMatchingAttribute() {
+		
+		MatchingAttribute matchingAttribute = new MatchingAttributeImpl();
+		for (CyNetwork net : networkList)
+			matchingAttribute.addNetwork(net);
+
+		for (String col : columnNames)
+		{
+			boolean found = true;
+			for (CyNetwork net : networkList)
+			{
+				CyColumn column = net.getDefaultNodeTable().getColumn(col);
+				if (column == null)  found = false;
+			}
+			if (found)
+			{
+				for (CyNetwork net : networkList)
+				{
+					CyColumn column = net.getDefaultNodeTable().getColumn(col);
+					matchingAttribute.putAttributeForMatching(net, column);
+				}
+				if (verbose) 
+					System.out.println("Matched: " + col);
+			}
+		}
+		return null;
 	}
 
 	private List<String> parseKeys(String keys2) {
@@ -235,7 +260,7 @@ public  String edgeKeys;
 			else if (verbose) System.out.println("net not found: " + netName);
 				
 		}
-		 if (verbose) System.out.println("networkList size: " + networkList.size());
+		 if (verbose) System.out.println(networkList + "  size: " + networkList.size());
 		return networkList;
 	}
 
@@ -249,47 +274,125 @@ public  String edgeKeys;
 		return netName;
 		
 	}
-	private AttributeMapping buildNodeAttributeMapping() {
-		AttributeMapping nodeAttributeMapping = new AttributeMappingImpl();
-//		Map<CyNetwork,String> attributeMapping = null;
-//		String targetName = "foo";
-//		nodeAttributeMapping.addAttributes(attributeMapping, targetName);
+	//nodeColumns="{display name,name,new display,String},{...}" #n+2
 
+	private AttributeMapping buildNodeAttributeMapping() {
+		
+		MergeMap nodeMap = new MergeMap(nodeMergeMap, networkList);
+		nodeMap.dump();
+		System.out.println("\n");
+		AttributeMapping nodeAttributeMapping = new AttributeMappingImpl();
+		for (CyNetwork net : networkList)
+		{
+			CyTable nodeTable = net.getDefaultNodeTable();
+			nodeAttributeMapping.addNetwork(net, nodeTable);
+		}
+		System.out.println("--\n");
+		for (int col = 0; col < nodeMap.columnsToMerge.size(); col++) 
+		{
+			ColumnMergeRecord rec  = nodeMap.columnsToMerge.get(col);
+			for (int i=0; i<networkList.size(); i++)
+			{
+				CyNetwork net = networkList.get(i);
+				System.out.println(getNetworkName(net) + ": " + rec.columnNames.get(net));
+				nodeAttributeMapping.setOriginalAttribute(net, rec.columnNames.get(net), rec.outName);
+			}
+			nodeAttributeMapping.setMergedAttribute(col, rec.outName);
+			nodeAttributeMapping.setMergedAttributeType(col, rec.outType);
+	}
 		return nodeAttributeMapping;
 	}
 
 	private AttributeMapping buildEdgeAttributeMapping() {
+		MergeMap edgeMap = new MergeMap(edgeMergeMap, networkList);
+		edgeMap.dump();
+		System.out.println("\n");
 		AttributeMapping edgeAttributeMapping = new AttributeMappingImpl();
-//		Map<CyNetwork,String> attributeMapping = null;
-//		String targetName = "edge foo";
-//		edgeAttributeMapping.addAttributes(attributeMapping, targetName);
+		for (CyNetwork net : networkList)
+		{
+			CyTable nodeTable = net.getDefaultEdgeTable();
+			edgeAttributeMapping.addNetwork(net, nodeTable);
+		}
+		
+		for (int col = 0; col < edgeMap.columnsToMerge.size(); col++) 
+		{
+			ColumnMergeRecord rec  = edgeMap.columnsToMerge.get(col);
+			for (int i=0; i<networkList.size(); i++)
+			{
+				CyNetwork net = networkList.get(i);
+				edgeAttributeMapping.setOriginalAttribute(net, rec.columnNames.get(net), rec.outName);
+			}
+			edgeAttributeMapping.setMergedAttribute(col, rec.outName);
+			edgeAttributeMapping.setMergedAttributeType(col, rec.outType);
+		}
 		return edgeAttributeMapping;
 	}
+	
 
+	class MergeMap 
+	{
+		List<CyNetwork> sourceNetworks;
+		List<ColumnMergeRecord> columnsToMerge = new ArrayList<ColumnMergeRecord>();
+		
+		MergeMap(String s, List<CyNetwork> nets)
+		{
+			sourceNetworks = nets;
+			int ptr = 0;
+			while (ptr >= 0)
+			{
+				int start = s.indexOf('{', ptr);
+				int end = s.indexOf('}', start+1);
+				String chunk = s.substring(start+1, end);
+				ColumnMergeRecord rec = new ColumnMergeRecord(chunk, nets);
+				columnsToMerge.add(rec);
+				ptr = s.indexOf(',', end+1);
+			}
+		}
+
+		public void dump() {
+			for (ColumnMergeRecord rec : columnsToMerge)
+				rec.dump();
+			
+		}
+	}
+	
+	class ColumnMergeRecord 
+	{
+		HashMap<CyNetwork, String> columnNames = new HashMap<CyNetwork, String>();
+		String outName;
+		ColumnType outType;
+		
+		ColumnMergeRecord(String str, List<CyNetwork> netw)
+		{
+			String[] names = str.split(",");
+			int size = names.length;
+			if (size != netw.size() + 2)
+				throw new IllegalArgumentException("Wrong number of arguments, given size of network list");
+			for (int i=0; i<size-2; i++)
+				columnNames.put(netw.get(i), names[i]);
+			outName = names[size-2];
+			outType = ColumnType.STRING;
+			
+		}
+		
+		void dump()
+		{
+			System.out.println(outName + " # " + outType.toString());
+			for (CyNetwork net : columnNames.keySet())
+				System.out.println(getNetworkName(net) + ": " + columnNames.get(net));
+			System.out.println("\n");
+		}
+	}
+	
+	
+	
+	
 	private void dumpInfo() {
-//		System.out.println("namespace: " + namespace);
-//		System.out.println("id: " + network.getSUID());
 		System.out.println("sources: " + sources);
-//		System.out.print("sourceList: <");
-//		if (sourceList != null)
-//		{
-//			for (String s: sourceList)
-//				System.out.print(s + ": ");
-//			System.out.println("> ");
-//		}
-//		else System.out.println("NULL>");
-		
-//		System.out.print("sourceArray: [");
-//		if (sourceArray != null)
-//		{
-//			for (String s: sourceArray)
-//				System.out.print(s + ": ");
-//			System.out.println("] ");
-//		}
-//		else System.out.println("NULL]");
-		
 		System.out.println("keys: " + nodeKeys);
+		System.out.println("nodeMergeMap: " + nodeMergeMap);
 		System.out.println("edgeKeys: " + edgeKeys);
+		System.out.println("edgeMergeMap: " + edgeMergeMap);
 		System.out.println("operation: " + operation);
 		System.out.println("retainPosition: " + (retainPosition ? "T" : "F"));
 		System.out.println("nodesOnly: " + (nodesOnly ? "T" : "F"));

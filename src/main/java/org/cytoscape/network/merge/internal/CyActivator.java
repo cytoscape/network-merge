@@ -79,7 +79,7 @@ public class CyActivator extends AbstractCyActivator {
 	
 		
 		
-        String version = "3.4.0";
+        String version = "3.5.0";
         VersionTaskFactory versionTask = new VersionTaskFactory(version);
 		props = new Properties();
 		props.setProperty(COMMAND_NAMESPACE, "network");
@@ -87,7 +87,7 @@ public class CyActivator extends AbstractCyActivator {
 		props.setProperty(COMMAND_DESCRIPTION, "Show version");
 		props.setProperty(COMMAND_LONG_DESCRIPTION, "Display the version of the merge app.");
 		props.setProperty(COMMAND_SUPPORTS_JSON, "true");
-		props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"3.4.0\"}");
+		props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"3.5.0\"}");
 		registerService(bc, versionTask, TaskFactory.class, props); 
 		
 		

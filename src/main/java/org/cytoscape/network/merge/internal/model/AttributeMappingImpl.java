@@ -41,7 +41,7 @@ import java.util.WeakHashMap;
 import org.cytoscape.network.merge.internal.util.ColumnType;
 
 /**
- * Class to instore the information how to mapping the attributes 
+ * Class to store the information how to mapping the attributes 
  * in the original networks to those in the resulting networks
  * 
  * 
@@ -102,10 +102,8 @@ public class AttributeMappingImpl implements AttributeMapping {
 
     @Override
     public ColumnType getMergedAttributeType(final int index) {
-        if (index>=this.getSizeMergedAttributes()||index<0)  {
+        if (index>=this.getSizeMergedAttributes()||index<0) 
             throw new java.lang.IndexOutOfBoundsException();
-        }
-
         return mergedAttributeTypes.get(index);
     }
 

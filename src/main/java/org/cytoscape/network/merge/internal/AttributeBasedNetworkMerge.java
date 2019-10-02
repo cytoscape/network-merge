@@ -148,18 +148,18 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	}
 
 	@Override
-	protected void mergeNode(final Map<CyNetwork, Set<CyNode>> mapNetNode, CyNode newNode, CyNetwork newNetwork) {
+	protected void mergeNode(final Map<CyNetwork, Set<CyNode>> mapNetToNodes, CyNode newNode, CyNetwork newNetwork) {
 		// TODO: refactor in Cytoscape3,
 		// in 2.x node with the same identifier be the same node
 		// and different nodes must have different identifier.
 		// Is this true in 3.0?
-		if (mapNetNode == null || mapNetNode.isEmpty())
+		if (mapNetToNodes == null || mapNetToNodes.isEmpty())
 			return;
 
-		// for attribute confilict handling, introduce a conflict node here?
+		// for attribute conflict handling, introduce a conflict node here?
 
 		// set other attributes as indicated in attributeMapping
-		setAttribute(newNetwork, newNode, mapNetNode, nodeAttributeMapping);
+		setAttribute(newNetwork, newNode, mapNetToNodes, nodeAttributeMapping);
 	}
 
 	/**
