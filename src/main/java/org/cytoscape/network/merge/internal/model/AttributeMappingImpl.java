@@ -41,20 +41,38 @@ import java.util.WeakHashMap;
 import org.cytoscape.network.merge.internal.util.ColumnType;
 
 /**
- * Class to store the information how to mapping the attributes 
- * in the original networks to those in the resulting networks
+ * Class to store the information how to map the attributes 
+ * in the original networks to those in the resulting network
  * 
  * 
  */
 public class AttributeMappingImpl implements AttributeMapping {
-    private Map<CyNetwork,List<String>> attributeMapping; //attribute mapping, network to list of attributes
+    private Map<CyNetwork,List<String>> attributeMapping; // a map of network to list of attributes
     private List<String> mergedAttributes;
     private List<ColumnType> mergedAttributeTypes;
     private List<Boolean> mergedAttributeMutability;
     private Map<CyNetwork,CyTable> cyTables;
     private final String nullAttr = ""; // to hold a position in vector standing that it's not a attribute
 
-    public AttributeMappingImpl() {
+    public void dump(String s)
+    {
+    	System.out.println("AttributeMappingImpl " + s + ": ");
+    	for (CyNetwork net : attributeMapping.keySet())
+    	{
+    		System.out.print(net.getSUID());
+    		System.out.println(dumpStrList(attributeMapping.get(net)));
+    	}
+//    	System.out.print(dumpStrList(mergedAttributes));
+   }
+    private String dumpStrList(List<String> list) {
+		StringBuilder str = new StringBuilder("[");
+		for (String s : list)
+			str.append(s + ",");
+		str.append("]");
+		return str.toString();
+	}
+    //-------------------------------------------------------------------
+	public AttributeMappingImpl() {
         attributeMapping = new WeakHashMap<CyNetwork,List<String>>();
         mergedAttributes = new ArrayList<String>();
         mergedAttributeTypes = new ArrayList<ColumnType>();
@@ -63,69 +81,44 @@ public class AttributeMappingImpl implements AttributeMapping {
     }
 
 
-    @Override
-    public CyTable getCyTable(CyNetwork net) {
-        return cyTables.get(net);
-    }
-    
-    @Override
-    public String[] getMergedAttributes() {
-        return (String[])mergedAttributes.toArray(new String[0]);
-    }
-   
-    @Override
-    public int getSizeMergedAttributes() {
-        return mergedAttributes.size();
-    }
+    @Override    public CyTable getCyTable(CyNetwork net){    return cyTables.get(net);    }
+    @Override    public String[] getMergedAttributes() 	{     return (String[])mergedAttributes.toArray(new String[0]);  }
+    @Override    public int getSizeMergedAttributes() 	{     return mergedAttributes.size();    }
             
-    @Override
-    public String getMergedAttribute(final int index) {
-        if (index<0 || index>=getSizeMergedAttributes()) {
-            throw new java.lang.IndexOutOfBoundsException("Index out of boundary.");
-        }
-        
-        //if (index>=mergedAttributes.size()) return null;
+    @Override    public String getMergedAttribute(final int index) {
+        if (index<0 || index>=getSizeMergedAttributes()) 
+            throw new IndexOutOfBoundsException("Index out of boundary.");        
         return mergedAttributes.get(index);
     }
      
     @Override
     public String setMergedAttribute(final int index, final String attributeName) {
-        if (attributeName==null) {
-            throw new java.lang.NullPointerException("Column name is null.");
-        }
-        
+        if (attributeName==null)   throw new NullPointerException("Column name is null.");
+        System.out.println("setMergedAttribute " + index + " to " + attributeName);
         String ret = mergedAttributes.set(index, attributeName);
         resetMergedAttributeType(index,false);
-
         return ret;
     }
 
     @Override
     public ColumnType getMergedAttributeType(final int index) {
-        if (index>=this.getSizeMergedAttributes()||index<0) 
-            throw new java.lang.IndexOutOfBoundsException();
+        if (index>=this.getSizeMergedAttributes()||index<0)    throw new IndexOutOfBoundsException();
         return mergedAttributeTypes.get(index);
     }
 
     @Override
     public ColumnType getMergedAttributeType(final String mergedAttributeName) {
-        if (mergedAttributeName==null) {
-            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
-        }
+        if (mergedAttributeName==null)      throw new NullPointerException("Null netID or mergedAttributeName");
 
         final int index = mergedAttributes.indexOf(mergedAttributeName);
-        if (index==-1) {
-            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
-        }
+        if (index==-1)     throw new IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
 
         return getMergedAttributeType(index);
     }
 
     @Override
     public boolean setMergedAttributeType(int index, ColumnType type) {
-        if (index>=this.getSizeMergedAttributes()||index<0) {
-                throw new java.lang.IndexOutOfBoundsException();
-        }
+        if (index>=this.getSizeMergedAttributes()||index<0)      throw new IndexOutOfBoundsException();
 
         Map<CyNetwork,String> map = getOriginalAttributeMap(index);
         for (Map.Entry<CyNetwork,String> entry : map.entrySet()) {
@@ -143,93 +136,64 @@ public class AttributeMappingImpl implements AttributeMapping {
 
     @Override
     public boolean setMergedAttributeType(String mergedAttributeName, ColumnType type) {
-        if (mergedAttributeName==null) {
-            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
-        }
-
+        if (mergedAttributeName==null)    throw new NullPointerException("Null netID or mergedAttributeName");
+ 
         final int index = mergedAttributes.indexOf(mergedAttributeName);
-        if (index==-1) {
-            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
-        }
-
+        if (index==-1)      			throw new IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
         return setMergedAttributeType(index,type);
     }
 
     @Override
     public boolean getMergedAttributeMutability(final int index) {
-        if (index>=this.getSizeMergedAttributes()||index<0)  {
-            throw new java.lang.IndexOutOfBoundsException();
-        }
-
         return mergedAttributeMutability.get(index);
     }
 
     @Override
     public boolean getMergedAttributeMutability(final String mergedAttributeName) {
         if (mergedAttributeName==null) {
-            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
+            throw new NullPointerException("Null netID or mergedAttributeName");
         }
 
         final int index = mergedAttributes.indexOf(mergedAttributeName);
-        if (index==-1) {
-            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
-        }
-
-        return getMergedAttributeMutability(index);
+        if (index==-1) 
+            throw new IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
+         return getMergedAttributeMutability(index);
     }
 
     @Override
     public void setMergedAttributeMutability(int index, boolean isImmutable) {
-        if (index>=this.getSizeMergedAttributes()||index<0) {
-                throw new java.lang.IndexOutOfBoundsException();
-        }
-
-        this.mergedAttributeMutability.set(index, isImmutable);
+        if (index>=this.getSizeMergedAttributes()||index<0)    throw new IndexOutOfBoundsException();
+        mergedAttributeMutability.set(index, isImmutable);
     }
 
     @Override
     public void setMergedAttributeMutability(String mergedAttributeName, boolean isImmutable) {
-        if (mergedAttributeName==null) {
-            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
-        }
-
+        if (mergedAttributeName==null)        throw new NullPointerException("Null netID or mergedAttributeName");
+       
         final int index = mergedAttributes.indexOf(mergedAttributeName);
-        if (index==-1) {
-            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
-        }
-
+        if (index==-1)   throw new IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
         setMergedAttributeMutability(index,isImmutable);
     }
             
     @Override
     public boolean containsMergedAttribute(final String attributeName) {
-        if (attributeName==null) {
-            throw new java.lang.NullPointerException("Column name is null.");
-        }
+        if (attributeName==null)      throw new NullPointerException("Column name is null.");
         return mergedAttributes.contains(attributeName);
     }
     
     @Override
     public String getOriginalAttribute(final CyNetwork net, final String mergedAttributeName) {
-        if (net==null||mergedAttributeName==null) {
-            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
-        }
+        if (net==null||mergedAttributeName==null)     	throw new NullPointerException("Null netID or mergedAttributeName");
         final int index = mergedAttributes.indexOf(mergedAttributeName);
-        if (index==-1) {
-            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
-        }
+        if (index==-1)          						throw new IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
         return getOriginalAttribute(net, index);
     }
     
     @Override
     public String getOriginalAttribute(final CyNetwork net, final int index) {
         final List<String> attrs = attributeMapping.get(net);
-        if (attrs==null) {
-            throw new java.lang.IllegalArgumentException(net.toString()+" is not selected as merging network");
-        }
-        if (index>=attrs.size()||index<0)  {
-            throw new java.lang.IndexOutOfBoundsException();
-        }
+        if (attrs==null)             		throw new IllegalArgumentException(net+" is not selected as merging network");
+        if (index>=attrs.size()||index<0)   throw new IndexOutOfBoundsException();
         final String attr = attrs.get(index);
         if (attr.compareTo(nullAttr)==0) return null;
         return attr;
@@ -237,23 +201,20 @@ public class AttributeMappingImpl implements AttributeMapping {
         
     @Override
     public Map<CyNetwork,String> getOriginalAttributeMap(String mergedAttributeName) {
-        if (mergedAttributeName==null) {
-            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
-        }
+        if (mergedAttributeName==null) 
+            throw new NullPointerException("Null netID or mergedAttributeName");
+
         final int index = mergedAttributes.indexOf(mergedAttributeName);
-        if (index==-1) {
-            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
-        }
+        if (index==-1) 
+            throw new IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
+       
         return getOriginalAttributeMap(index);        
     }
     
     @Override
     public Map<CyNetwork,String> getOriginalAttributeMap(int index) {
-        if (index>=this.getSizeMergedAttributes()||index<0) {
-            throw new java.lang.IndexOutOfBoundsException();
-        }
-        
-        Map<CyNetwork,String> return_this = new HashMap<CyNetwork,String>();
+        if (index>=this.getSizeMergedAttributes()||index<0)        throw new IndexOutOfBoundsException();
+        Map<CyNetwork,String> netStrMap = new HashMap<CyNetwork,String>();
         
         final Iterator<Map.Entry<CyNetwork,List<String>>> it = attributeMapping.entrySet().iterator();
         while (it.hasNext()) {
@@ -261,22 +222,21 @@ public class AttributeMappingImpl implements AttributeMapping {
             final CyNetwork net = entry.getKey();
             final List<String> attrs = entry.getValue();
             final String attr = attrs.get(index);
-            if (attr.compareTo(nullAttr)!=0) {
-                return_this.put(net, attr);
-            }
+            if (attr.compareTo(nullAttr)!=0)         
+            	netStrMap.put(net, attr);
         }
         
-        return return_this;
+        return netStrMap;
     }
     
     @Override
     public String setOriginalAttribute(final CyNetwork net, final String attributeName, final String mergedAttributeName) {
         if (net==null||mergedAttributeName==null) {
-            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
+            throw new NullPointerException("Null netID or mergedAttributeName");
         }
         final int index = mergedAttributes.indexOf(mergedAttributeName);
         if (index==-1) {
-            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
+            throw new IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
         }
         return setOriginalAttribute(net, attributeName, index);
     }
@@ -284,13 +244,13 @@ public class AttributeMappingImpl implements AttributeMapping {
     @Override
     public String setOriginalAttribute(final CyNetwork net, final String attributeName, final int index){
         if (net==null||attributeName==null||attributeName==null) {
-            throw new java.lang.NullPointerException("Null netID or attributeName or mergedAttributeName");
+            throw new NullPointerException("Null netID or attributeName or mergedAttributeName");
         }
         
         final List<String> attrs = attributeMapping.get(net);
         if (attrs==null) return null;
         if (index>=attrs.size()||index<0) {
-            throw new java.lang.IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException();
         }
         
         final String old = attrs.get(index);
@@ -304,26 +264,21 @@ public class AttributeMappingImpl implements AttributeMapping {
     
     @Override
     public String removeOriginalAttribute(final CyNetwork net, final String mergedAttributeName) {
-        if (net==null||mergedAttributeName==null) {
-            throw new java.lang.NullPointerException("Null netID or mergedAttributeName");
-        }
+        if (net==null||mergedAttributeName==null)       throw new NullPointerException("Null netID or mergedAttributeName");
         
         final int index = mergedAttributes.indexOf(mergedAttributeName);
-        if (index==-1) {
-            throw new java.lang.IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
-        }
-        
+        if (index==-1)       throw new IllegalArgumentException("No "+mergedAttributeName+" is contained in merged table columns");
         return removeOriginalAttribute(net, index);
     }
     
     @Override
     public String removeOriginalAttribute(final CyNetwork net, final int index) {
         if (net==null) {
-            throw new java.lang.NullPointerException("Null netID");
+            throw new NullPointerException("Null netID");
         }
         
         if (index<0 || index>=getSizeMergedAttributes()) {
-            throw new java.lang.IndexOutOfBoundsException("Index out of bounds");
+            throw new IndexOutOfBoundsException("Index out of bounds");
         }
         
         final List<String> attrs = attributeMapping.get(net);
@@ -338,34 +293,18 @@ public class AttributeMappingImpl implements AttributeMapping {
 
     @Override
     public String removeMergedAttribute(final String mergedAttributeName) {
-        if (mergedAttributeName==null) {
-            throw new java.lang.NullPointerException("Null mergedAttributeName");
-        }
-        
+        if (mergedAttributeName==null)         throw new NullPointerException("Null mergedAttributeName");
         final int index = mergedAttributes.indexOf(mergedAttributeName);
-        if (index ==-1 ) {
-            return null;
-        }
-        
-        return removeMergedAttribute(index);
+        return (index ==-1 )? null: removeMergedAttribute(index);
     }
     
     @Override
     public String removeMergedAttribute(final int index) {
-        if (index<0 || index>=getSizeMergedAttributes()) {
-            throw new java.lang.IndexOutOfBoundsException("Index out of bounds");
-        }
-        
-        //int n = attributeMapping.size();
-        //for (int i=0; i<n; i++) {
-        //    attributeMapping.get(i).remove(index);
-        //}
-        for (List<String> attrs : attributeMapping.values()) {
+        if (index<0 || index>=getSizeMergedAttributes())     throw new IndexOutOfBoundsException("Index out of bounds");
+         for (List<String> attrs : attributeMapping.values()) 
                 attrs.remove(index);
-        }
-
-        this.mergedAttributeTypes.remove(index);
-        this.mergedAttributeMutability.remove(index);
+        mergedAttributeTypes.remove(index);
+        mergedAttributeMutability.remove(index);
         
         return mergedAttributes.remove(index);
     }
@@ -377,36 +316,24 @@ public class AttributeMappingImpl implements AttributeMapping {
     
     @Override
     public String addAttributes(final Map<CyNetwork,String> mapNetAttributeName, final String mergedAttrName, final int index) {
-        if (mapNetAttributeName==null || mergedAttrName==null) {
-            throw new java.lang.NullPointerException();
-        }
-        
-        if (index<0 || index>getSizeMergedAttributes()) {
-            throw new java.lang.IndexOutOfBoundsException("Index out of bounds");
-        }
-        
-        if (mapNetAttributeName.isEmpty()) {
-            throw new java.lang.IllegalArgumentException("Empty map");
-        }
+        if (mapNetAttributeName==null || mergedAttrName==null) throw new NullPointerException();
+        if (index<0 || index>getSizeMergedAttributes())        throw new IndexOutOfBoundsException("Index out of bounds");
+        if (mapNetAttributeName.isEmpty())             			throw new IllegalArgumentException("Empty map");
         
         final Set<CyNetwork> networkSet = getNetworkSet();
-        if (!networkSet.containsAll(mapNetAttributeName.keySet())) {
-            throw new java.lang.IllegalArgumentException("Non-exist network(s)");
-        }
+        if (!networkSet.containsAll(mapNetAttributeName.keySet())) throw new IllegalArgumentException("Non-exist network(s)");
         
         final Iterator<Map.Entry<CyNetwork,List<String>>> it = attributeMapping.entrySet().iterator();
         //final Iterator<Vector<String>> it = attributeMapping.values().iterator();
         while (it.hasNext()) { // add an empty attr for each network
             final Map.Entry<CyNetwork,List<String>> entry = it.next();
             final CyNetwork net = entry.getKey();
+ 
             final List<String> attrs = entry.getValue();
-            
             String name = mapNetAttributeName.get(net);
-            if (name != null) {
-                attrs.add(index,name);
-            } else {
-                attrs.add(index,nullAttr);
-            }
+            if (name != null)   attrs.add(index,name);
+            else               attrs.add(index,nullAttr);
+            
         }
         
         String defaultName = getDefaultMergedAttrName(mergedAttrName);
@@ -419,18 +346,16 @@ public class AttributeMappingImpl implements AttributeMapping {
 
     @Override
     public void addNetwork(final CyNetwork net, CyTable table) {
-        if (net==null || table==null) {
-            throw new java.lang.NullPointerException();
-        }
+        if (net==null || table==null)
+            throw new NullPointerException();
         
         cyTables.put(net, table);
         
         final List<String> attributeNames = new ArrayList<String>();
         for (CyColumn col : table.getColumns()) {
             String colName = col.getName();
-            if (!colName.equals("SUID") && !colName.equals("selected")) { //skip SUID & selected
+            if (!colName.equals("SUID") && !colName.equals("selected"))  //skip SUID & selected
                 attributeNames.add(col.getName());
-            }
         }
         Collections.sort(attributeNames);
 
@@ -439,21 +364,9 @@ public class AttributeMappingImpl implements AttributeMapping {
             
             final List<String> attrs = new ArrayList<String>();
             attributeMapping.put(net, attrs);
-                            
-
-            for (int i=0; i<nAttr; i++) {
-//                //TODO REMOVE IN Cytoscape3.0
-//                if (attributeNames.get(i).compareTo(CyNetwork.NAME)==0) {
-//                    continue;
-//                }//TODO REMOVE IN Cytoscape3.0
-                
+            for (int i=0; i<nAttr; i++) 
                 addNewAttribute(net, attributeNames.get(i));
-            }
-            
-//            //TODO REMOVE IN 3.0, canonicalName in each network form a separate attribute in resulting network
-//            addNewAttribute(netID, CyNetwork.NAME);//TODO REMOVE IN Cytoscape3.0
-            
-
+ 
         } else { // for each attributes to be added, search if the same attribute exists
                  // if yes, add to that group; otherwise create a new one
             List<String> attrs = attributeMapping.get(net);
@@ -463,21 +376,14 @@ public class AttributeMappingImpl implements AttributeMapping {
             }
 
             final int nr = mergedAttributes.size(); // # of rows, the same as the # of attributes in merged network
-
             attrs = new ArrayList<String>(nr); // new map
-            for (int i=0; i<nr; i++) {
+            for (int i=0; i<nr; i++) 
                 attrs.add(nullAttr);
-            }
+            
             attributeMapping.put(net, attrs);
 
             for (int i=0; i<nAttr; i++) {
                 final String at = attributeNames.get(i);
-                 
-//                //TODO REMOVE IN Cytoscape3.0, canonicalName in each network form a separate attribute in resulting network
-//                if (at.compareTo(CyNetwork.NAME)==0) {
-//                    addNewAttribute(netID, CyNetwork.NAME);
-//                    continue;
-//                }//TODO REMOVE IN Cytoscape3.0
                  
                 boolean found = false;             
                 for (int ir=0; ir<nr; ir++) {
@@ -485,7 +391,6 @@ public class AttributeMappingImpl implements AttributeMapping {
                     if (mergedAttributes.get(ir).compareTo(at)==0) { // same name as the merged attribute
                         found = true;
                         this.setOriginalAttribute(net, at, ir);
-                        //attrs.set(ir, at);// add the attribute on the ir row
                         break; 
                     }
 
@@ -494,40 +399,30 @@ public class AttributeMappingImpl implements AttributeMapping {
                         final CyNetwork net_curr = it.next();
                         final String attr_curr = attributeMapping.get(net_curr).get(ir);
                         if (attr_curr.compareTo(at)==0) { // same name as the original attribute
-                            //if (AttributeValueCastUtils.isAttributeTypeSame(attr_curr,at,attributes)) // not neccessay in Cytoscape2.6
-                                                                                                       // since attributes are global
                             found = true;
-                            //attrs.set(ir, at); // add the attribute on the ir row
                             this.setOriginalAttribute(net, at, ir);
                             break; 
                         }
                     }
-
-                    //if (found) break; // do not need to break, add to multiple line if match
                 }
 
-                if (!found) { //no same attribute found
+                if (!found)  //no same attribute found
                     addNewAttribute(net,at);
-                }                 
             }
         }
     }
     
     @Override
-    public Set<CyNetwork> getNetworkSet() {
-        return attributeMapping.keySet();
-    }
+    public Set<CyNetwork> getNetworkSet() {        return attributeMapping.keySet();    }
 
     @Override
-    public int getSizeNetwork() {
-        return attributeMapping.size();
-    }   
+    public int getSizeNetwork() {        return attributeMapping.size();    }   
     
     @Override
     public void removeNetwork(final CyNetwork net) {
-        if (net==null) {
-            throw new java.lang.NullPointerException();
-        }
+        if (net==null) 
+            throw new NullPointerException("net == null");
+
         final List<String> removed = attributeMapping.remove(net);
         final int n = removed.size();
         for (int i=n-1; i>=0; i--) {
@@ -544,102 +439,66 @@ public class AttributeMappingImpl implements AttributeMapping {
      * {@inheritDoc}
      */
     protected boolean pack(final int index) {
-        if (index<0 || index>=getSizeMergedAttributes()) {
-            throw new java.lang.IndexOutOfBoundsException("Index out of boundary.");
-        }
-        
+        if (index<0 || index>=getSizeMergedAttributes()) 
+            throw new IndexOutOfBoundsException("Index out of boundary.");
+         
         Iterator<List<String>> it = attributeMapping.values().iterator();
-        while (it.hasNext()) {
-            if (it.next().get(index).compareTo(nullAttr)!=0) {
+        while (it.hasNext())
+            if (it.next().get(index).compareTo(nullAttr)!=0) 
                 return false;
-            }
-        }
 
         this.removeMergedAttribute(index);
         return true;
-
-//        mergedAttributes.remove(index);
-//
-//        it = attributeMapping.values().iterator();
-//        while ( it.hasNext() ) {
-//            it.next().remove(index);
-//        }
-
-//        if (attributeMapping.isEmpty()) {
-//            mergedAttributes.clear();
-//        }
-
     }
     
-//    protected boolean attributeExistsInOriginalNetwork(final CyNetwork net, final String attr) {
-//        if (attr==null) {
-//            throw new java.lang.NullPointerException();
-//        }
-//        return (cyTables.get(net).getColumn(attr) != null);
-//    }
-    
-    private String getDefaultMergedAttrName(final String attr) {
-        if (attr==null) {
-            throw new java.lang.NullPointerException();
-        }
+    private String getDefaultMergedAttrName(final String attr) 
+    {
+        if (attr==null)     throw new NullPointerException("attr==null");
         
         String appendix = "";
-        int i = 0;
-
-        while (true) {
+        for (int i = 0; true; ) {
             String attr_ret = attr+appendix;
             if (mergedAttributes.contains(attr_ret)){
                 appendix = "." + ++i;
-            } else {
-                return attr+appendix;
-            } 
+            } else  return attr+appendix;
         }
     }
         
     protected void addNewAttribute(final CyNetwork net, final String attributeName) {
-        if (net==null || attributeName==null) {
-            throw new java.lang.NullPointerException();
-        }
+        if (net==null || attributeName==null)  throw new NullPointerException();
         
         final Iterator<List<String>> it = attributeMapping.values().iterator();
-        while (it.hasNext()) { // add an empty attr for each network
+        while (it.hasNext()) // add an empty attr for each network
             it.next().add(nullAttr);
-        }
+
         final List<String> attrs = attributeMapping.get(net);
         attrs.set(attrs.size()-1, attributeName); // set attr
         
         String attrMerged = attributeName;
-//        //TODO remove in Cytosape3
-//        if (attributeName.compareTo(CyNetwork.NAME)==0) {
-//            attrMerged = net+"."+CyNetwork.NAME;
-//        }//TODO remove in Cytosape3
-        
         mergedAttributes.add(getDefaultMergedAttrName(attrMerged)); // add in merged attr
         this.resetMergedAttributeType(mergedAttributeTypes.size(),true);
         this.resetMergedAttributeMutability(mergedAttributeMutability.size(),true);
     }
 
     protected void resetMergedAttributeType(final int index, boolean add) {
-        if (this.getSizeMergedAttributes()>this.mergedAttributeTypes.size()+(add?1:0)) {
-                throw new java.lang.IllegalStateException("column type not complete");
-        }
+        if (this.getSizeMergedAttributes()>this.mergedAttributeTypes.size()+(add?1:0)) 
+                throw new IllegalStateException("column type not complete");
 
-        if (index>=this.getSizeMergedAttributes()||index<0) {
-                throw new java.lang.IndexOutOfBoundsException();
-        }
+        if (index>=this.getSizeMergedAttributes()||index<0) 
+                throw new IndexOutOfBoundsException();
 
         Map<CyNetwork,String> map = getOriginalAttributeMap(index);
         Set<ColumnType> types = EnumSet.noneOf(ColumnType.class);
         for (Map.Entry<CyNetwork,String> entry : map.entrySet()) {
             CyTable table = cyTables.get(entry.getKey());
             types.add(ColumnType.getType(table.getColumn(entry.getValue())));
-        }
+     }
         
-        final ColumnType type = ColumnType.getResonableCompatibleConvertionType(types);
+     final ColumnType type = ColumnType.getReasonableCompatibleConversionType(types);
 
-        if (add) { //new
+        if (add) //new
                 mergedAttributeTypes.add(index,type);
-        } else {
+        else {
             final ColumnType old = mergedAttributeTypes.get(index);
             if (!ColumnType.isConvertable(type, old))
                 mergedAttributeTypes.set(index, type);
@@ -647,13 +506,10 @@ public class AttributeMappingImpl implements AttributeMapping {
     }
 
     protected void resetMergedAttributeMutability(final int index, boolean add) {
-        if (this.getSizeMergedAttributes()>this.mergedAttributeMutability.size()+(add?1:0)) {
-                throw new java.lang.IllegalStateException("column mutability not complete");
-        }
-
-        if (index>=this.getSizeMergedAttributes()||index<0) {
-                throw new java.lang.IndexOutOfBoundsException();
-        }
+        if (this.getSizeMergedAttributes()>this.mergedAttributeMutability.size()+(add?1:0)) 
+                throw new IllegalStateException("column mutability not complete");
+        if (index>=this.getSizeMergedAttributes()||index<0)
+                throw new IndexOutOfBoundsException();
 
         Map<CyNetwork,String> map = getOriginalAttributeMap(index);
         boolean isImmutable = true;
@@ -664,10 +520,10 @@ public class AttributeMappingImpl implements AttributeMapping {
             isImmutable = false;
             break;
         }
-        if (add) { // new
+        if (add)  // new
             mergedAttributeMutability.add(index, isImmutable);
-        } else {
+        else
             mergedAttributeMutability.set(index, isImmutable);
-        }
+       
     }
 }

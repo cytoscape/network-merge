@@ -70,7 +70,7 @@ class MatchNodeTable extends JTable {
                     colNames.add(colName);
             }
             
-            CyColumn cyCol = matchingAttribute.getAttributeForMatching(net);
+            CyColumn cyCol = matchingAttribute.getColumn(net);
             JComboBox<String> comboBox = new JComboBox<String>(colNames);
             
             if (cyCol!=null) {
@@ -113,7 +113,7 @@ class MatchNodeTable extends JTable {
 
         @Override
         public Object getValueAt(int row, int col) {
-            return matchingAttribute.getAttributeForMatching(networks.get(col)).getName();
+            return matchingAttribute.getColumn(networks.get(col)).getName();
         }
 
         @Override

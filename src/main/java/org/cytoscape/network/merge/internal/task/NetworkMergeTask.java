@@ -26,20 +26,19 @@ package org.cytoscape.network.merge.internal.task;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.network.merge.internal.AttributeBasedNetworkMerge;
+import org.cytoscape.network.merge.internal.EdgeMerger;
 import org.cytoscape.network.merge.internal.NetworkMerge.Operation;
+import org.cytoscape.network.merge.internal.NodeMerger;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollector;
 import org.cytoscape.network.merge.internal.model.AttributeMapping;
 import org.cytoscape.network.merge.internal.model.MatchingAttribute;
-import org.cytoscape.network.merge.internal.util.AttributeMerger;
 import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
-import org.cytoscape.network.merge.internal.util.DefaultAttributeMerger;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeValueMatcher;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
 import org.cytoscape.work.AbstractTask;
@@ -55,9 +54,9 @@ public class NetworkMergeTask extends AbstractTask {
 	
 	final private CreateNetworkViewTaskFactory netViewCreator;
 
-	private final MatchingAttribute matchingAttribute;
-	private final AttributeMapping nodeAttributeMapping;
-	private final AttributeMapping edgeAttributeMapping;
+	private MatchingAttribute matchingAttribute;
+	private AttributeMapping nodeAttributeMapping;
+	private AttributeMapping edgeAttributeMapping;
 
 	private boolean inNetworkMerge;
 
@@ -105,10 +104,10 @@ public class NetworkMergeTask extends AbstractTask {
 		if(networkMerge != null)
 			this.networkMerge.interrupt();
 	}
-
+static boolean verbose = true;
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
-
+	
 		taskMonitor.setProgress(0.0d);
 		taskMonitor.setTitle("Merging Networks");
 
@@ -121,21 +120,27 @@ public class NetworkMergeTask extends AbstractTask {
 		networkManager.addNetwork(newNetwork);
 		
 		taskMonitor.setStatusMessage("Merging networks...");
-		final AttributeMerger attributeMerger = new DefaultAttributeMerger(conflictCollector);
+		final NodeMerger nodeMerger = new NodeMerger(conflictCollector);
+		final EdgeMerger edgeMerger = new EdgeMerger(conflictCollector);
 		final AttributeValueMatcher attributeValueMatcher = new DefaultAttributeValueMatcher();
 
-		this.networkMerge = new AttributeBasedNetworkMerge(
+		networkMerge = new AttributeBasedNetworkMerge(
 				matchingAttribute, 
 				nodeAttributeMapping, 
 				edgeAttributeMapping,
-				attributeMerger, 
+				nodeMerger, 
+				edgeMerger, 
 				attributeValueMatcher, 
 				taskMonitor);
 		networkMerge.setWithinNetworkMerge(inNetworkMerge);
+		if (verbose) 
+			System.err.println("new AttributeBasedNetworkMerge" );
 		
 		// Merge everything
 		networkMerge.mergeNetwork(newNetwork, selectedNetworkList, operation, subtractOnlyUnconnectedNodes);
 
+		if (verbose) 
+			System.err.println("mergeNetwork" );
 		taskMonitor.setStatusMessage("Processing conflicts...");
 		// Perform conflict handling if necessary
 		if (conflictCollector != null && !conflictCollector.isEmpty() && !cancelled) {

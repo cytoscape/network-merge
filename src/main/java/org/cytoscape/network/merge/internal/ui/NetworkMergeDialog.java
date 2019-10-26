@@ -77,7 +77,7 @@ import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollectorI
 import org.cytoscape.network.merge.internal.model.AttributeMapping;
 import org.cytoscape.network.merge.internal.model.AttributeMappingImpl;
 import org.cytoscape.network.merge.internal.model.MatchingAttribute;
-import org.cytoscape.network.merge.internal.model.MatchingAttributeImpl;
+import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.task.NetworkMergeTask;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
@@ -160,7 +160,7 @@ public class NetworkMergeDialog extends JDialog {
 //		checkCyThesaurus = checkCyThesaurus();
 		
 		operationButtons = new TreeMap<>();
-		matchingAttr = new MatchingAttributeImpl();
+		matchingAttr = new NetColumnMap();
 		nodeAttrMapping = new AttributeMappingImpl();
 		edgeAttrMapping = new AttributeMappingImpl();
 
@@ -829,6 +829,9 @@ public class NetworkMergeDialog extends JDialog {
 					final AttributeConflictCollector conflictCollector = new AttributeConflictCollectorImpl();
 
 					// Network merge task
+					((AttributeMappingImpl) nodeAttrMapping).dump("create NetworkMergeTask");
+					System.out.println("\n");
+					((NetColumnMap) matchingAttr).dump("create NetworkMergeTask");
 					final NetworkMergeTask nmTask = new NetworkMergeTask(cnf, cnm, netName, matchingAttr,
 							nodeAttrMapping, edgeAttrMapping, selectedNetData.getNetworkList(),
 							getOperation(), getDifference1Btn().isSelected(), conflictCollector, tgtType,   //, selectedNetAttrIDType

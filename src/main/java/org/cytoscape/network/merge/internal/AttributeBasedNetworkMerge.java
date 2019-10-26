@@ -34,10 +34,11 @@ import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.model.AttributeMapping;
+import org.cytoscape.network.merge.internal.model.AttributeMappingImpl;
 import org.cytoscape.network.merge.internal.model.MatchingAttribute;
-import org.cytoscape.network.merge.internal.util.AttributeMerger;
 import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
 import org.cytoscape.network.merge.internal.util.ColumnType;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeValueMatcher;
@@ -54,7 +55,8 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	private final AttributeMapping nodeAttributeMapping;
 	private final AttributeMapping edgeAttributeMapping;
 	private final AttributeValueMatcher attributeValueMatcher;
-	private final AttributeMerger attributeMerger;
+	private final EdgeMerger edgeMerger;
+	private final NodeMerger nodeMerger;
 
 	/**
 	 * 
@@ -67,10 +69,11 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 			final MatchingAttribute matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, 
 			final AttributeMapping edgeAttributeMapping,
-			final AttributeMerger attributeMerger, 
+			final NodeMerger nodeMerger, 
+			final EdgeMerger edgeMerger, 
 			final TaskMonitor taskMonitor) {
 		
-		this(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping, attributeMerger,
+		this(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping, nodeMerger, edgeMerger,
 				new DefaultAttributeValueMatcher(), taskMonitor);
 	}
 
@@ -86,7 +89,8 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 			final MatchingAttribute matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, 
 			final AttributeMapping edgeAttributeMapping,
-			final AttributeMerger attributeMerger, 
+			final NodeMerger nodeMerger, 
+			final EdgeMerger edgMerger, 
 			AttributeValueMatcher attributeValueMatcher,
 			final TaskMonitor taskMonitor) {
 		super(taskMonitor);
@@ -94,13 +98,15 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 		if (matchingAttribute == null) 		throw new java.lang.NullPointerException("matchingAttribute");
 		if (nodeAttributeMapping == null) 	throw new java.lang.NullPointerException("nodeAttributeMapping");
 		if (edgeAttributeMapping == null) 	throw new java.lang.NullPointerException("edgeAttributeMapping");
-		if (attributeMerger == null) 		throw new java.lang.NullPointerException("attributeMerger");
+		if (nodeMerger == null) 			throw new java.lang.NullPointerException("nodeMerger");
+		if (edgMerger == null) 				throw new java.lang.NullPointerException("edgMerger");
 		if (attributeValueMatcher == null) 	throw new java.lang.NullPointerException("attributeValueMatcher");
 		
 		this.matchingAttribute = matchingAttribute;
 		this.nodeAttributeMapping = nodeAttributeMapping;
 		this.edgeAttributeMapping = edgeAttributeMapping;
-		this.attributeMerger = attributeMerger;
+		this.nodeMerger = nodeMerger;
+		this.edgeMerger = edgMerger;
 		this.attributeValueMatcher = attributeValueMatcher;
 	}
 
@@ -113,17 +119,19 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 		if (n1 == n2)
 			return true;
 
-		CyColumn attr1 = matchingAttribute.getAttributeForMatching(net1);
-		CyColumn attr2 = matchingAttribute.getAttributeForMatching(net2);
+		CyColumn col1 = matchingAttribute.getColumn(net1);
+		CyColumn col2 = matchingAttribute.getColumn(net2);
 		
-		if (attr1 == null || attr2 == null)
+		if (col1 == null || col2 == null)
 			throw new IllegalArgumentException("Please specify the matching table column first");
 		
-		return attributeValueMatcher.matched(n1, attr1, n2, attr2);
+		boolean result = attributeValueMatcher.matched(n1, col1, n2, col2);
+		System.out.println((result? "MATCH " : "NOMATCH    ") + net1.getSUID() + ": " + col1.getName() + ", " + net2.getSUID() + ": " + col2.getName());
+		return result; 
 	}
 
 	@Override
-	protected void proprocess(CyNetwork toNetwork) {
+	protected void preprocess(CyNetwork toNetwork) {
 		setAttributeTypes(toNetwork.getDefaultNodeTable(), nodeAttributeMapping);
 		setAttributeTypes(toNetwork.getDefaultEdgeTable(), edgeAttributeMapping);
 	}
@@ -148,18 +156,14 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	}
 
 	@Override
-	protected void mergeNode(final Map<CyNetwork, Set<CyNode>> mapNetToNodes, CyNode newNode, CyNetwork newNetwork) {
-		// TODO: refactor in Cytoscape3,
-		// in 2.x node with the same identifier be the same node
-		// and different nodes must have different identifier.
-		// Is this true in 3.0?
-		if (mapNetToNodes == null || mapNetToNodes.isEmpty())
+	protected void mergeNode(final NetNodeSet mapNetToNodes, CyNode newNode, CyNetwork newNetwork) {
+
+		if (mapNetToNodes == null || mapNetToNodes.map.isEmpty())
 			return;
 
 		// for attribute conflict handling, introduce a conflict node here?
-
 		// set other attributes as indicated in attributeMapping
-		setAttribute(newNetwork, newNode, mapNetToNodes, nodeAttributeMapping);
+		setNodeAttribute(newNetwork, newNode, mapNetToNodes, nodeAttributeMapping);
 	}
 
 	/**
@@ -172,39 +176,93 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 		}
 
 		// set other attributes as indicated in attributeMapping
-		setAttribute(newNetwork, newEdge, mapNetEdge, edgeAttributeMapping);
+		setEdgeAttribute(newNetwork, newEdge, mapNetEdge, edgeAttributeMapping);
 	}
 
 	/*
 	 * set attribute for the merge node/edge according to attribute mapping
 	 */
-	protected <T extends CyIdentifiable> void setAttribute(CyNetwork newNetwork, T toEntry,
-			final Map<CyNetwork, Set<T>> mapNetGOs, final AttributeMapping attributeMapping) {
+	
+	static public void dumpRow(CyNode node)
+	{
+		CyNetwork net = node.getNetworkPointer();
+		if (net == null) { System.out.println("NULL net");   return; 	} 
+		CyRow row = net.getRow(node);
+		if (row == null) { System.out.println("NULL row");   return; 	} 
+		Map<String, Object> vals = row.getAllValues();
+		System.out.print("{");
+		for (String s : vals.keySet())
+			System.out.print(s + ":" + vals.get(s) + ", ") ;
+		System.out.println("}");
+	}
+	protected void setNodeAttribute(CyNetwork newNetwork, CyNode inNode,
+			final NetNodeSet netNodeSet, final AttributeMapping attributeMapping) {
+
+		((AttributeMappingImpl) attributeMapping).dump("E setNodeAttribute");
 		final int nattr = attributeMapping.getSizeMergedAttributes();
-		for (int i = 0; i < nattr; i++) {
-			CyColumn attr_merged = newNetwork.getRow(toEntry).getTable()
-					.getColumn(attributeMapping.getMergedAttribute(i));
+		for (int i = 0; i < nattr; i++) 
+		{
+			CyRow row = newNetwork.getRow(inNode);
+			CyTable t = row.getTable();
+			CyColumn column = t.getColumn(attributeMapping.getMergedAttribute(i));
 
 			// merge
-			Map<T, CyColumn> mapGOAttr = new HashMap<T, CyColumn>();
-			final Iterator<Map.Entry<CyNetwork, Set<T>>> itEntryNetGOs = mapNetGOs.entrySet().iterator();
-			while (itEntryNetGOs.hasNext()) {
-				final Map.Entry<CyNetwork, Set<T>> entryNetGOs = itEntryNetGOs.next();
-				final CyNetwork net = entryNetGOs.getKey();
+			Map<CyNode, CyColumn> nodeToColMap = new HashMap<CyNode, CyColumn>();
+			
+			for (CyNetwork net : netNodeSet.map.keySet())
+			{
 				final String attrName = attributeMapping.getOriginalAttribute(net, i);
+				if (attrName == null) continue;
 				final CyTable table = attributeMapping.getCyTable(net);
-				if (attrName != null) {
-					final Iterator<T> itGO = entryNetGOs.getValue().iterator();
-					while (itGO.hasNext()) {
-						final T idGO = itGO.next();
-						mapGOAttr.put(idGO, table.getColumn(attrName));
+				final CyColumn colum = (table == null) ? null : table.getColumn(attrName);
+				System.out.println(net.getSUID() + " " + (colum == null ? "NULL" : colum.getName()) + " z= " + netNodeSet.map.size());
+				System.out.println("a");
+
+				for (CyNode node : netNodeSet.map.get(net))
+					nodeToColMap.put(node, colum);
+			}
+			System.out.println("b");
+			System.out.println("nodeToColMap:");
+			dumpNodes(nodeToColMap);
+			nodeMerger.mergeAttribute(nodeToColMap, inNode, column, newNetwork);
+		}
+		System.out.println("foo");
+	}
+
+	/*
+	 * set attribute for the merge node/edge according to attribute mapping
+	 */
+	protected void setEdgeAttribute(CyNetwork newNetwork, CyEdge toEntry,
+			final Map<CyNetwork, Set<CyEdge>> mapNetGOs, final AttributeMapping attributeMapping) {
+
+	((AttributeMappingImpl) attributeMapping).dump("setEdgeAttribute");
+	final int nattr = attributeMapping.getSizeMergedAttributes();
+	for (int i = 0; i < nattr; i++) {
+		CyTable t = newNetwork.getRow(toEntry).getTable();
+		CyColumn attr_merged = t.getColumn(attributeMapping.getMergedAttribute(i));
+
+			// merge
+		Map<CyEdge, CyColumn> edgeToColMap = new HashMap<CyEdge, CyColumn>();
+		final Iterator<Map.Entry<CyNetwork, Set<CyEdge>>> itEntryNetGOs = mapNetGOs.entrySet().iterator();
+		while (itEntryNetGOs.hasNext()) {
+			final Map.Entry<CyNetwork, Set<CyEdge>> entryNetGOs = itEntryNetGOs.next();
+			final CyNetwork net = entryNetGOs.getKey();
+			final String attrName = attributeMapping.getOriginalAttribute(net, i);
+//				System.out.print(attrName + ", ");
+			final CyTable table = attributeMapping.getCyTable(net);
+			if (attrName != null) {
+				final Iterator<CyEdge> object = entryNetGOs.getValue().iterator();
+				while (object.hasNext()) {
+						final CyEdge idGO = object.next();						
+						edgeToColMap.put(idGO, table.getColumn(attrName));
 					}
 				}
 			}
-
+			System.out.println();
+			dump(edgeToColMap);
 			try {
 				// TODO how to handle network?
-				attributeMerger.mergeAttribute(mapGOAttr, toEntry, attr_merged, newNetwork);
+				edgeMerger.mergeAttribute(edgeToColMap, toEntry, attr_merged, newNetwork);
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
@@ -212,4 +270,18 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 		}
 	}
 
+	
+	private void dumpNodes(Map<CyNode, CyColumn> map)
+	{
+		for (CyNode id : map.keySet())
+			System.out.print(id.getSUID() + ">" + map.get(id).getName() + ". ");
+		System.out.println();
+	}
+	
+	private void dump(Map<CyEdge, CyColumn> map)
+	{
+		for (CyIdentifiable id : map.keySet())
+			System.out.print(id.getSUID() + ">" + map.get(id).getName() + ". ");
+		System.out.println();
+	}
 }

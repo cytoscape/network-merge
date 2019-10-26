@@ -69,30 +69,28 @@ class MergeAttributeTable extends JTable {
 	private int indexMatchingAttr; // the index of matching attribute in the attribute mapping
 								   // only used when isNode==true
 
-	public MergeAttributeTable(final AttributeMapping attributeMapping, final MatchingAttribute matchingAttribute) {
+	public MergeAttributeTable(final AttributeMapping mapping, final MatchingAttribute attribute) {
 		super();
 		isNode = true;
 		indexMatchingAttr = -1;
-		this.mergedNetworkName = "Merged Network";
-		this.attributeMapping = attributeMapping;
-		this.matchingAttribute = matchingAttribute;
+		mergedNetworkName = "Merged Network";
+		attributeMapping = mapping;
+		matchingAttribute = attribute;
 		model = new MergeAttributeTableModel();
 		setModel(model);
 		setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	}
 
-	public MergeAttributeTable(final AttributeMapping attributeMapping) {
+	public MergeAttributeTable(final AttributeMapping attribute) {
 		super();
-		this.mergedNetworkName = "Merged Network";
-		this.attributeMapping = attributeMapping;
+		mergedNetworkName = "Merged Network";
+		attributeMapping = attribute;
 		model = new MergeAttributeTableModel();
 		isNode = false;
 		setModel(model);
 	}
 
-	public String getMergedNetworkName() {
-		return mergedNetworkName;
-	}
+	public String getMergedNetworkName() {		return mergedNetworkName;	}
 
 	private Vector<String> getComboboxOption(int col) {
 		CyNetwork net = model.getNetork(col);
@@ -109,12 +107,12 @@ class MergeAttributeTable extends JTable {
 	}
 
 	protected void setColumnEditorAndRenderer() {
-		final int n = this.getColumnCount();
+		final int n = getColumnCount();
 		
 		for (int i = 0; i < n; i++) { // for each network
 			final TableColumn column = getColumnModel().getColumn(i);
 
-			if (this.isColumnOriginalNetwork(i)) {
+			if (isColumnOriginalNetwork(i)) {
 				final Vector<String> attrs = getComboboxOption(i);
 				final JComboBox<String> comboBox = new JComboBox<>(attrs);
 				column.setCellEditor(new DefaultCellEditor(comboBox));
@@ -125,20 +123,18 @@ class MergeAttributeTable extends JTable {
 							boolean hasFocus, int row, int column) {
 						super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 						
-						this.setForeground(
-								UIManager.getColor(isSelected ? "Table.selectionForeground" : "Table.foreground"));
-						this.setBackground(
-								UIManager.getColor(isSelected ? "Table.selectionBackground" : "Table.background"));
+						setForeground(UIManager.getColor(isSelected ? "Table.selectionForeground" : "Table.foreground"));
+						setBackground(UIManager.getColor(isSelected ? "Table.selectionBackground" : "Table.background"));
 						
 						if (row < (isNode ? 1 : 0)) // TODO Cytoscape3
-							this.setToolTipText("Change this in the matching node table above");
+							setToolTipText("Change this in the matching node table above");
 						else
-							this.setToolTipText(null);
+							setToolTipText(null);
 						
 						return this;
 					}
 				});
-			} else if (this.isColumnMergedNetwork(i)) {
+			} else if (isColumnMergedNetwork(i)) {
 				column.setCellRenderer(new DefaultTableCellRenderer() {
 					@Override
 					public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
@@ -146,25 +142,25 @@ class MergeAttributeTable extends JTable {
 						super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 						
 						if (isNode && row == 0)
-							this.setToolTipText("Change me!");
+							setToolTipText("Change me!");
 						else
-							this.setToolTipText("Click to change...");
+							setToolTipText("Click to change...");
 						
 						if (isSelected) {
-							this.setForeground(UIManager.getColor("Table.selectionForeground"));
-							this.setBackground(UIManager.getColor("Table.selectionBackground"));
+							setForeground(UIManager.getColor("Table.selectionForeground"));
+							setBackground(UIManager.getColor("Table.selectionBackground"));
 						} else {
-							this.setBackground(UIManager.getColor("Table.background"));
+							setBackground(UIManager.getColor("Table.background"));
 							
 							if (row >= table.getRowCount() - 1) {
-								this.setForeground(UIManager.getColor("TextField.inactiveForeground"));
+								setForeground(UIManager.getColor("TextField.inactiveForeground"));
 							} else {
 								if (isNode && row == 0) {
-									this.setForeground(LookAndFeelUtil.getErrorColor());
-									this.setToolTipText("Change me!");
+									setForeground(LookAndFeelUtil.getErrorColor());
+									setToolTipText("Change me!");
 								} else {
-									this.setForeground(table.getForeground());
-									this.setToolTipText("Click to change...");
+									setForeground(table.getForeground());
+									setToolTipText("Click to change...");
 								}
 							}
 						}
@@ -172,10 +168,10 @@ class MergeAttributeTable extends JTable {
 						return this;
 					}
 				});
-			} else if (this.isColumnMergedType(i)) {
+			} else if (isColumnMergedType(i)) {
 				// set editor
 				RowTableCellEditor rowEditor = new RowTableCellEditor(this);
-				int nr = this.getRowCount();
+				int nr = getRowCount();
 				final Vector<ColumnType>[] cbvalues = new Vector[nr];
 				
 				for (int ir = 0; ir < nr - 1; ir++) {
@@ -189,7 +185,7 @@ class MergeAttributeTable extends JTable {
 						types.add(ColumnType.getType(cyTable.getColumn(entry.getValue())));
 					}
 					
-					ColumnType reasonalbeType = ColumnType.getResonableCompatibleConvertionType(types);
+					ColumnType reasonalbeType = ColumnType.getReasonableCompatibleConversionType(types);
 					Vector<ColumnType> convertiableTypes = new Vector<>(ColumnType.getConvertibleTypes(reasonalbeType));
 
 					cbvalues[ir] = convertiableTypes;
@@ -209,16 +205,14 @@ class MergeAttributeTable extends JTable {
 							boolean hasFocus, int row, int column) {
 						super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 						
-						this.setForeground(
-								UIManager.getColor(isSelected ? "Table.selectionForeground" : "Table.foreground"));
-						this.setBackground(
-								UIManager.getColor(isSelected ? "Table.selectionBackground" : "Table.background"));
+						setForeground(UIManager.getColor(isSelected ? "Table.selectionForeground" : "Table.foreground"));
+						setBackground(UIManager.getColor(isSelected ? "Table.selectionBackground" : "Table.background"));
 						
 						if (row >= table.getRowCount() - 1) {
-							this.setBackground(UIManager.getColor("TextField.inactiveForeground"));
+							setBackground(UIManager.getColor("TextField.inactiveForeground"));
 						} else if (!table.isCellEditable(row, column)) {
-							this.setBackground(UIManager.getColor("TextField.inactiveForeground"));
-							this.setToolTipText("Only types of new columns are changeable");
+							setBackground(UIManager.getColor("TextField.inactiveForeground"));
+							setToolTipText("Only types of new columns are changeable");
 						}
 						
 						return this;
@@ -269,40 +263,36 @@ class MergeAttributeTable extends JTable {
 
 			Map<CyNetwork, String> netAttrMap = new HashMap<CyNetwork, String>();
 			Set<ColumnType> types = EnumSet.noneOf(ColumnType.class);
-			for (Map.Entry<CyNetwork, CyColumn> entry : matchingAttribute.getNetAttrMap().entrySet()) {
+			for (Map.Entry<CyNetwork, CyColumn> entry : matchingAttribute.getNetColumnMap().entrySet()) {
 				netAttrMap.put(entry.getKey(), entry.getValue().getName());
 				types.add(ColumnType.getType(entry.getValue()).toPlain());
 			}
 
 			attributeMapping.addAttributes(netAttrMap, attr_merged, indexMatchingAttr);
 			attributeMapping.setMergedAttributeType(indexMatchingAttr,
-					ColumnType.getResonableCompatibleConvertionType(types).toList());
+					ColumnType.getReasonableCompatibleConversionType(types).toList());
 			update = true;
 		} else {
 			Set<CyNetwork> networks = matchingAttribute.getNetworkSet();
 			Iterator<CyNetwork> it = networks.iterator();
-			if (!it.hasNext()) { // empty
+			if (!it.hasNext())  // empty
 				indexMatchingAttr = -1;
-			}
 
 			while (it.hasNext()) {
 				CyNetwork network = it.next();
-				String attr = matchingAttribute.getAttributeForMatching(network).getName();
+				String attr = matchingAttribute.getColumn(network).getName();
 				String old = attributeMapping.setOriginalAttribute(network, attr, indexMatchingAttr);
-				if (attr.compareTo(old) != 0) {
+				if (attr.compareTo(old) != 0) 
 					update = true;
-				}
 			}
 		}
 
-		if (update) {
+		if (update) 
 			fireTableStructureChanged();
-		}
 	}
 
 	protected void fireTableHeaderChanged() {
 		model.fireTableStructureChanged();
-		// setCellRender();
 		setColumnEditorAndRenderer();
 	}
 
@@ -340,41 +330,20 @@ class MergeAttributeTable extends JTable {
 
 		@Override
 		public String getColumnName(final int col) {
-			if (isColumnMergedType(col)) {
-				return "Column type";
-			}
-
-			if (isColumnMergedNetwork(col)) {
-				return mergedNetworkName;
-			}
-
-			if (isColumnOriginalNetwork(col)) {
-				return networks.get(col).toString();
-			}
-
+			if (isColumnMergedType(col))			return "Column type";
+			if (isColumnMergedNetwork(col)) 		return mergedNetworkName;
+			if (isColumnOriginalNetwork(col)) 		return networks.get(col).toString();
 			return null;
 		}
 
 		@Override
 		public Object getValueAt(final int row, final int col) {
-			final int iAttr = row; // TODO used in Cytoscape3
+			final int iAttr = row; 
 
-			if (row == getRowCount() - 1) {
-				return null;
-			}
-
-			if (isColumnOriginalNetwork(col)) {
-				return attributeMapping.getOriginalAttribute(networks.get(col), iAttr);
-			}
-
-			if (isColumnMergedNetwork(col)) {
-				return attributeMapping.getMergedAttribute(iAttr);
-			}
-
-			if (isColumnMergedType(col)) {
-				return attributeMapping.getMergedAttributeType(iAttr);
-			}
-
+			if (row == getRowCount() - 1) 				return null;
+			if (isColumnOriginalNetwork(col)) 			return attributeMapping.getOriginalAttribute(networks.get(col), iAttr);
+			if (isColumnMergedNetwork(col)) 			return attributeMapping.getMergedAttribute(iAttr);
+			if (isColumnMergedType(col)) 				return attributeMapping.getMergedAttributeType(iAttr);
 			return null;
 		}
 
@@ -388,20 +357,9 @@ class MergeAttributeTable extends JTable {
 			if (isNode && row == 0) // make the matching attribute ineditable
 				return !isColumnOriginalNetwork(col);
 
-			if (isColumnOriginalNetwork(col))
-				return true;
-
-			if (isColumnMergedNetwork(col))
-				return row != getRowCount() - 1;
-
-			if (isColumnMergedType(col))
-				return true;
-			// String mergedAttribute = getValueAt(row,col-1);
-			// CyAttributes attrs = attributeMapping.getCyAttributes();
-			// return
-			// !Arrays.asList(attrs.getAttributeNames()).contains(mergedAttribute);//
-			// non-editable for existing attribute
-
+			if (isColumnOriginalNetwork(col))			return true;
+			if (isColumnMergedNetwork(col))				return row != getRowCount() - 1;
+			if (isColumnMergedType(col))				return true;
 			return false;
 		}
 
@@ -417,26 +375,22 @@ class MergeAttributeTable extends JTable {
 				return; // should not happen
 
 			if (isColumnMergedType(col)) {
-				if (iAttr == n)
-					return;
+				if (iAttr == n)					return;
 
 				ColumnType type = (ColumnType) value;
 				ColumnType type_curr = attributeMapping.getMergedAttributeType(iAttr);
-				if (type == type_curr)
-					return;
+				if (type == type_curr)			return;
 
 				attributeMapping.setMergedAttributeType(iAttr, type);
 
 			} else if (isColumnMergedNetwork(col)) { // column of merged network
-				if (iAttr == n)
-					return;
+				if (iAttr == n)					return;
 
 				final String v = (String) value;
 
 				String attr_curr = attributeMapping.getMergedAttribute(iAttr);
-				if (attr_curr.compareTo(v) == 0) { // if the same
-					return;
-				}
+				if (attr_curr.compareTo(v) == 0)	return; // if the same
+				
 
 				if (v.length() == 0) {
 					JOptionPane.showMessageDialog(getParent(), "Please use a non-empty name for the column.",
@@ -463,7 +417,7 @@ class MergeAttributeTable extends JTable {
 
 					Map<CyNetwork, String> map = new HashMap<CyNetwork, String>();
 					map.put(net, v);
-
+//System.out.println(v.toString());
 					attributeMapping.addAttributes(map, v);
 					fireTableDataChanged();
 					return;

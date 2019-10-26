@@ -42,14 +42,14 @@ public interface MatchingAttribute {
      * 
      * @return map of network to attribute
      */
-    public Map<CyNetwork,CyColumn> getNetAttrMap();
+    public Map<CyNetwork,CyColumn> getNetColumnMap();
 
     /**
      * 
      * @param netID
      * @return the attribute of network for matching node
      */
-    public CyColumn getAttributeForMatching(CyNetwork net);
+    public CyColumn getColumn(CyNetwork net);
     
     /**
      *

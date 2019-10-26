@@ -39,41 +39,49 @@ import org.cytoscape.model.CyTable;
  * 
  * 
  */
-public class MatchingAttributeImpl implements MatchingAttribute {
+public class NetColumnMap implements MatchingAttribute {
     private Map<CyNetwork,CyColumn> attributeForMatching; // network to attribute name
     
-    public MatchingAttributeImpl() {
+    public NetColumnMap() {
         attributeForMatching = new WeakHashMap<CyNetwork,CyColumn>();
     }
 
+    public void dump(String s)
+    {
+		System.out.print(s + "NetColumnMap -> ");
+    	for (CyNetwork net: attributeForMatching.keySet())
+    		System.out.print(net.getSUID() + ": " + attributeForMatching.get(net) + ", ");
+		System.out.println();
+
+    }
     @Override
-    public Map<CyNetwork,CyColumn> getNetAttrMap() {
+    public Map<CyNetwork,CyColumn> getNetColumnMap() {
         return attributeForMatching;
     }
     
     @Override
-    public CyColumn getAttributeForMatching(final CyNetwork net) {
-        if (net == null) {
-            throw new java.lang.NullPointerException();
-        }
+    public CyColumn getColumn(final CyNetwork net) {
+        if (net == null) 
+            throw new java.lang.NullPointerException("getAttributeForMatching: net == null");
         
         return attributeForMatching.get(net);
     }
     
     @Override
     public void putAttributeForMatching(final CyNetwork net, final CyColumn col) {
-        if (net==null || col==null) {
-            throw new java.lang.NullPointerException();
-        }
+        if (net==null) 
+            throw new java.lang.NullPointerException("putAttributeForMatching: net == null");
         
+        if (col==null)
+            throw new java.lang.NullPointerException("putAttributeForMatching: col == null");
+
         attributeForMatching.put(net, col);
     }
 
     @Override
     public void addNetwork(final CyNetwork net) {
-        if (net == null) {
-            throw new java.lang.NullPointerException();
-        }
+        if (net == null) 
+            throw new java.lang.NullPointerException("addNetwork: net == null");
         
         //putAttributeForMatching(net,net.getDefaultNodeTable().getPrimaryKey());
         CyTable table = net.getDefaultNodeTable();
@@ -83,25 +91,12 @@ public class MatchingAttributeImpl implements MatchingAttribute {
             
     @Override
     public CyColumn removeNetwork(final CyNetwork net) {
-        if (net == null) {
-            throw new java.lang.NullPointerException();
-        }
-        
+        if (net == null)
+            throw new java.lang.NullPointerException("removeNetwork: net == null");
         return attributeForMatching.remove(net);
     }
     
-    @Override
-    public int getSizeNetwork() {
-        return attributeForMatching.size();
-    }
-    
-    @Override
-    public Set<CyNetwork> getNetworkSet() {
-        return attributeForMatching.keySet();
-    }
-
-    @Override
-    public void clear() {
-        attributeForMatching.clear();
-    }
+    @Override public int getSizeNetwork() 			{       return attributeForMatching.size();    }
+    @Override public Set<CyNetwork> getNetworkSet() {       return attributeForMatching.keySet();    }
+    @Override public void clear() 					{       attributeForMatching.clear();    }
 }
