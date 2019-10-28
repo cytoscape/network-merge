@@ -37,7 +37,7 @@ import org.cytoscape.network.merge.internal.NetworkMerge.Operation;
 import org.cytoscape.network.merge.internal.NodeMerger;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollector;
 import org.cytoscape.network.merge.internal.model.AttributeMapping;
-import org.cytoscape.network.merge.internal.model.MatchingAttribute;
+import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeValueMatcher;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
@@ -54,7 +54,7 @@ public class NetworkMergeTask extends AbstractTask {
 	
 	final private CreateNetworkViewTaskFactory netViewCreator;
 
-	private MatchingAttribute matchingAttribute;
+	private NetColumnMap matchingAttribute;
 	private AttributeMapping nodeAttributeMapping;
 	private AttributeMapping edgeAttributeMapping;
 
@@ -65,7 +65,7 @@ public class NetworkMergeTask extends AbstractTask {
 	private final String networkName;
 	
 	private AttributeBasedNetworkMerge networkMerge;
-
+private boolean asCommand;
 	/**
 	 * Constructor.<br>
 	 * 
@@ -73,7 +73,7 @@ public class NetworkMergeTask extends AbstractTask {
 	public NetworkMergeTask(final CyNetworkFactory cnf, 
 			final CyNetworkManager networkManager,
 			final String networkName, 
-			final MatchingAttribute matchingAttribute,
+			final NetColumnMap matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, 
 			final AttributeMapping edgeAttributeMapping,
 			final List<CyNetwork> selectedNetworkList, 
@@ -82,6 +82,7 @@ public class NetworkMergeTask extends AbstractTask {
 			final AttributeConflictCollector conflictCollector,
 			final String tgtType,   //final Map<String, Map<String, Set<String>>> selectedNetworkAttributeIDType,
 			final boolean inNetworkMerge, 
+			final boolean asCommand, 
 			final CreateNetworkViewTaskFactory netViewCreator) 
 	{
 		this.selectedNetworkList = selectedNetworkList;
@@ -96,6 +97,7 @@ public class NetworkMergeTask extends AbstractTask {
 		this.networkName = networkName;
 		this.cnf = cnf;
 		this.networkManager = networkManager;
+		this.asCommand = asCommand;
 	}
 
 	@Override
@@ -130,7 +132,7 @@ static boolean verbose = true;
 				edgeAttributeMapping,
 				nodeMerger, 
 				edgeMerger, 
-				attributeValueMatcher, 
+				attributeValueMatcher, asCommand,
 				taskMonitor);
 		networkMerge.setWithinNetworkMerge(inNetworkMerge);
 		if (verbose) 

@@ -38,7 +38,7 @@ import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.model.AttributeMapping;
 import org.cytoscape.network.merge.internal.model.AttributeMappingImpl;
-import org.cytoscape.network.merge.internal.model.MatchingAttribute;
+import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
 import org.cytoscape.network.merge.internal.util.ColumnType;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeValueMatcher;
@@ -51,12 +51,13 @@ import org.cytoscape.work.TaskMonitor;
  */
 public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 
-	private final MatchingAttribute matchingAttribute;
+	private final NetColumnMap matchingAttribute;
 	private final AttributeMapping nodeAttributeMapping;
 	private final AttributeMapping edgeAttributeMapping;
 	private final AttributeValueMatcher attributeValueMatcher;
 	private final EdgeMerger edgeMerger;
 	private final NodeMerger nodeMerger;
+	private final boolean asCommand;
 
 	/**
 	 * 
@@ -66,15 +67,16 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	 * @param attributeMerger
 	 */
 	public AttributeBasedNetworkMerge(
-			final MatchingAttribute matchingAttribute,
+			final NetColumnMap matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, 
 			final AttributeMapping edgeAttributeMapping,
 			final NodeMerger nodeMerger, 
 			final EdgeMerger edgeMerger, 
+			boolean asCommand,
 			final TaskMonitor taskMonitor) {
 		
 		this(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping, nodeMerger, edgeMerger,
-				new DefaultAttributeValueMatcher(), taskMonitor);
+				new DefaultAttributeValueMatcher(), asCommand, taskMonitor);
 	}
 
 	/**
@@ -86,12 +88,13 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	 * @param attributeValueMatcher
 	 */
 	public AttributeBasedNetworkMerge(
-			final MatchingAttribute matchingAttribute,
+			final NetColumnMap matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, 
 			final AttributeMapping edgeAttributeMapping,
 			final NodeMerger nodeMerger, 
 			final EdgeMerger edgMerger, 
 			AttributeValueMatcher attributeValueMatcher,
+			boolean asCommand,
 			final TaskMonitor taskMonitor) {
 		super(taskMonitor);
 
@@ -108,6 +111,7 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 		this.nodeMerger = nodeMerger;
 		this.edgeMerger = edgMerger;
 		this.attributeValueMatcher = attributeValueMatcher;
+		this.asCommand = asCommand;
 	}
 
 	@Override
@@ -126,46 +130,91 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 			throw new IllegalArgumentException("Please specify the matching table column first");
 		
 		boolean result = attributeValueMatcher.matched(n1, col1, n2, col2);
-		System.out.println((result? "MATCH " : "NOMATCH    ") + net1.getSUID() + ": " + col1.getName() + ", " + net2.getSUID() + ": " + col2.getName());
+//		System.out.println((result? "MATCH " : "NOMATCH    ") + net1.getSUID() + ": " + col1.getName() + ", " + net2.getSUID() + ": " + col2.getName());
 		return result; 
 	}
 
+	//----------------------------------------------------------------
+	static String MATCH = "Matching.Attribute";
+	CyColumn matchColumn = null;
+	
 	@Override
 	protected void preprocess(CyNetwork toNetwork) {
 		setAttributeTypes(toNetwork.getDefaultNodeTable(), nodeAttributeMapping);
+		if (asCommand)
+		{
+			toNetwork.getDefaultNodeTable().createColumn(MATCH, String.class, true);
+			matchColumn = toNetwork.getDefaultNodeTable().getColumn(MATCH);
+		}
 		setAttributeTypes(toNetwork.getDefaultEdgeTable(), edgeAttributeMapping);
 	}
 
-	private void setAttributeTypes(final CyTable table, AttributeMapping attributeMapping) {
+	private void setAttributeTypes(final CyTable table, AttributeMapping attributeMapping) 
+	{
 		int n = attributeMapping.getSizeMergedAttributes();
-		for (int i = 0; i < n; i++) {
+		System.out.println("setAttributeTypes has size "  + n);
+		for (int i = 0; i < n; i++) 
+		{
 			String attr = attributeMapping.getMergedAttribute(i);
-			if (table.getColumn(attr) != null) {
-				continue; // TODO: check if the type is the same
-			}
-
-			// TODO: immutability?
+			if (table.getColumn(attr) != null) 		continue; // TODO: check if the type is the same
+				
 			final ColumnType type = attributeMapping.getMergedAttributeType(i);
 			final boolean isImmutable = attributeMapping.getMergedAttributeMutability(i);
-			if (type.isList()) {
-				table.createListColumn(attr, type.getType(), isImmutable);
-			} else {
-				table.createColumn(attr, type.getType(), isImmutable);
-			}
+			if (type.isList()) 	table.createListColumn(attr, type.getType(), isImmutable);
+			else 				table.createColumn(attr, type.getType(), isImmutable);
+			
 		}
+		System.out.println("setAttributeTypes has size "  + n);
 	}
-
+	//----------------------------------------------------------------
 	@Override
-	protected void mergeNode(final NetNodeSet mapNetToNodes, CyNode newNode, CyNetwork newNetwork) {
+	protected void mergeNode(final NetNodeSetMap mapNetToNodes, CyNode targetNode, CyNetwork targetNetwork) {
 
 		if (mapNetToNodes == null || mapNetToNodes.map.isEmpty())
 			return;
+		((AttributeMappingImpl) nodeAttributeMapping).dump("E mergeNode --------------");
+//		AttributeMappingImpl.dumpStrs(nodeAttributeMapping.getMergedAttributes());
+		final int nattr = nodeAttributeMapping.getSizeMergedAttributes();
+		for (int i = 0; i < nattr; i++) 
+		{
+			String attribute = nodeAttributeMapping.getMergedAttribute(i);
+					
+			CyRow row = targetNetwork.getRow(targetNode);
+			CyTable t = row.getTable();
+			CyColumn targetColumn = t.getColumn(attribute);
 
-		// for attribute conflict handling, introduce a conflict node here?
-		// set other attributes as indicated in attributeMapping
-		setNodeAttribute(newNetwork, newNode, mapNetToNodes, nodeAttributeMapping);
+			// merge
+			Map<CyNode, CyColumn> nodeToColMap = new HashMap<CyNode, CyColumn>();
+			
+			for (CyNetwork net : mapNetToNodes.map.keySet())
+			{
+				Set<CyNode> nodeList = mapNetToNodes.get(net);
+				final CyTable table = nodeAttributeMapping.getCyTable(net);
+				if (table == null) continue;
+
+				final String attrName = nodeAttributeMapping.getOriginalAttribute(net, i);
+				if (attrName == null) continue;
+				if (attrName.equals(attribute))
+					nodeMerger.mergeAttribute(nodeToColMap, targetNode, targetColumn, targetNetwork);
+				
+				final CyColumn colum = (table == null) ? null : table.getColumn(attrName);
+				for (CyNode node : nodeList)
+					nodeToColMap.put(node, colum);
+			}
+//			dumpNodeColumnMap(nodeToColMap);
+			nodeMerger.mergeAttribute(nodeToColMap, targetNode, targetColumn, targetNetwork);
+			for (CyNetwork net : mapNetToNodes.map.keySet())
+			{
+				boolean isJoinColumn = matchingAttribute.contains(net, attribute);
+				if (isJoinColumn)
+					nodeMerger.mergeAttribute(nodeToColMap, targetNode, matchColumn, targetNetwork);
+			}
+		}
+		System.out.println("Node Merged");
 	}
+//	}
 
+	//----------------------------------------------------------------
 	/**
 	 * {@inheritDoc}
 	 */
@@ -183,52 +232,6 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	 * set attribute for the merge node/edge according to attribute mapping
 	 */
 	
-	static public void dumpRow(CyNode node)
-	{
-		CyNetwork net = node.getNetworkPointer();
-		if (net == null) { System.out.println("NULL net");   return; 	} 
-		CyRow row = net.getRow(node);
-		if (row == null) { System.out.println("NULL row");   return; 	} 
-		Map<String, Object> vals = row.getAllValues();
-		System.out.print("{");
-		for (String s : vals.keySet())
-			System.out.print(s + ":" + vals.get(s) + ", ") ;
-		System.out.println("}");
-	}
-	protected void setNodeAttribute(CyNetwork newNetwork, CyNode inNode,
-			final NetNodeSet netNodeSet, final AttributeMapping attributeMapping) {
-
-		((AttributeMappingImpl) attributeMapping).dump("E setNodeAttribute");
-		final int nattr = attributeMapping.getSizeMergedAttributes();
-		for (int i = 0; i < nattr; i++) 
-		{
-			CyRow row = newNetwork.getRow(inNode);
-			CyTable t = row.getTable();
-			CyColumn column = t.getColumn(attributeMapping.getMergedAttribute(i));
-
-			// merge
-			Map<CyNode, CyColumn> nodeToColMap = new HashMap<CyNode, CyColumn>();
-			
-			for (CyNetwork net : netNodeSet.map.keySet())
-			{
-				final String attrName = attributeMapping.getOriginalAttribute(net, i);
-				if (attrName == null) continue;
-				final CyTable table = attributeMapping.getCyTable(net);
-				final CyColumn colum = (table == null) ? null : table.getColumn(attrName);
-				System.out.println(net.getSUID() + " " + (colum == null ? "NULL" : colum.getName()) + " z= " + netNodeSet.map.size());
-				System.out.println("a");
-
-				for (CyNode node : netNodeSet.map.get(net))
-					nodeToColMap.put(node, colum);
-			}
-			System.out.println("b");
-			System.out.println("nodeToColMap:");
-			dumpNodes(nodeToColMap);
-			nodeMerger.mergeAttribute(nodeToColMap, inNode, column, newNetwork);
-		}
-		System.out.println("foo");
-	}
-
 	/*
 	 * set attribute for the merge node/edge according to attribute mapping
 	 */
@@ -270,8 +273,22 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 		}
 	}
 
+	//----------------------------------------------------------------
+	//----------------------------------------------------------------
+//	static public void dumpRow(CyNode node)
+//	{
+//		CyNetwork net = node.getNetworkPointer();
+//		if (net == null) { System.out.println("NULL net");   return; 	} 
+//		CyRow row = net.getRow(node);
+//		if (row == null) { System.out.println("NULL row");   return; 	} 
+//		Map<String, Object> vals = row.getAllValues();
+//		System.out.print("{");
+//		for (String s : vals.keySet())
+//			System.out.print(s + ":" + vals.get(s) + ", ") ;
+//		System.out.println("}");
+//	}
 	
-	private void dumpNodes(Map<CyNode, CyColumn> map)
+	private void dumpNodeColumnMap(Map<CyNode, CyColumn> map)
 	{
 		for (CyNode id : map.keySet())
 			System.out.print(id.getSUID() + ">" + map.get(id).getName() + ". ");

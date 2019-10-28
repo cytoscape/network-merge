@@ -25,20 +25,17 @@ package org.cytoscape.network.merge.internal;
  */
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
-import org.cytoscape.model.CyEdge;
-import org.cytoscape.model.CyIdentifiable;
-import org.cytoscape.model.CyRow;
 import org.cytoscape.work.TaskMonitor;
 
 /**
@@ -79,7 +76,8 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 
 	public void interrupt() {		interrupted = true;	}
 	
-	class NetNodeSet 
+	//----------------------------------------------------------------------------
+	class NetNodeSetMap 
 	{
 		 HashMap<CyNetwork, Set<CyNode>> map = new HashMap<CyNetwork, Set<CyNode>>();
 		
@@ -110,7 +108,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 		public void put(CyNetwork net1, Set<CyNode> nodes) 	{ 	map.put(net1, nodes); }
 		public boolean containsKey(CyNetwork net1) 			{	return map.containsKey(net1);		}
 	}
-
+	//----------------------------------------------------------------------------
 	/**
 	 * Check whether two nodes match
 	 * 
@@ -129,7 +127,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 	 * @param newNode
 	 *            merge data to this new node
 	 */
-	protected abstract void mergeNode(NetNodeSet mapNetNode, CyNode newNode, CyNetwork newNetwork);
+	protected abstract void mergeNode(NetNodeSetMap mapNetNode, CyNode newNode, CyNetwork newNetwork);
 
 	/**
 	 * Merge (matched) nodes into one. This method will be refactored in
@@ -257,8 +255,8 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 		mapEdgeDirectedNoInteractions.clear();
 		mapEdgeNoInteractions.clear();
 		// get node matching list
-		List<NetNodeSet> matchedNodeList = getMatchedNodeList(fromNetworks);
-		List<NetNodeSet> differenceNodeList = null;
+		List<NetNodeSetMap> matchedNodeList = getMatchedNodeList(fromNetworks);
+		List<NetNodeSetMap> differenceNodeList = null;
 		if(op == Operation.DIFFERENCE && subtractOnlyUnconnectedNodes) 
 			differenceNodeList = matchedNodeList;
 	
@@ -268,16 +266,16 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 		matchedNodeList = getMatchedNodeList(matchedNodeList, op, fromNetworks);
 		System.out.println("C:  build the list of node list that will merge------------" );
 		dumpMatchedNodeList(matchedNodeList);
-		System.out.println("D:  merge nodes in the list ----------------776--------------" );
+		System.out.println("D:  merge nodes in the list ---------------------------" );
 		
 		
 		
-		Map<CyNode, NetNodeSet> differenceNodeMap = null;
+		Map<CyNode, NetNodeSetMap> differenceNodeMap = null;
 		if(differenceNodeList != null) {
 			System.out.println("D1:  difference list --------------" );
 			differenceNodeList.removeAll(matchedNodeList);
-			differenceNodeMap = new HashMap<CyNode, NetNodeSet>();
-			for(NetNodeSet mapNetNode: differenceNodeList) {
+			differenceNodeMap = new HashMap<CyNode, NetNodeSetMap>();
+			for(NetNodeSetMap mapNetNode: differenceNodeList) {
 				Set<CyNode> nodes = mapNetNode.get(fromNetworks.get(0));
 				if(nodes != null) {
 					//remove networks besides the first
@@ -298,15 +296,13 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 			if (interrupted)				return null;
 			taskMonitor.setProgress(((double)(i + 1)/ nNode)*0.5d);
 
-			final NetNodeSet netNodeMap = matchedNodeList.get(i);
+			final NetNodeSetMap netNodeMap = matchedNodeList.get(i);
 			System.out.println("netNodeMap.size - " + netNodeMap.map.size() + " " + netNodeMap.toString());
 			if (netNodeMap == null || netNodeMap.map.isEmpty())			continue;
 
 			CyNode targetNode = mergedNetwork.addNode();
 			mergeNode(netNodeMap, targetNode, mergedNetwork);
-			nodedump(targetNode);
 
-			
 			for (Set<CyNode> nodeSet : netNodeMap.map.values())
 				for (CyNode n : nodeSet) 
 					nodeNodeMap.put(n, targetNode);
@@ -355,7 +351,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 				if(source == null) {
 					CyNode originalSource = originalEdge.getSource();
 					source = mergedNetwork.addNode();
-					NetNodeSet mapNetNode = differenceNodeMap.get(originalSource);
+					NetNodeSetMap mapNetNode = differenceNodeMap.get(originalSource);
 					mergeNode(mapNetNode, source, mergedNetwork);
 					for(Set<CyNode> nodes: mapNetNode.map.values())
 						for(CyNode node: nodes)
@@ -364,7 +360,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 				if(target == null) {
 					CyNode originalTarget = originalEdge.getTarget();
 					target = mergedNetwork.addNode();
-					NetNodeSet mapNetNode = differenceNodeMap.get(originalTarget);
+					NetNodeSetMap mapNetNode = differenceNodeMap.get(originalTarget);
 					mergeNode(mapNetNode, target, mergedNetwork);
 					for(Set<CyNode> nodes: mapNetNode.map.values())
 						for(CyNode node: nodes)
@@ -386,14 +382,14 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 		return mergedNetwork;
 	}
 
-	private void nodedump(CyNode node) {
-		System.out.print("NodeDump: " + node.getSUID() + " > ");
-		AttributeBasedNetworkMerge.dumpRow(node);
-	}
+//	private void nodedump(CyNode node) {
+//		System.out.print("NodeDump: " + node.getSUID() + " > ");
+//		AttributeBasedNetworkMerge.dumpRow(node);
+//	}
 
-	private void dumpMatchedNodeList(List<NetNodeSet> matchedNodeList) {
+	private void dumpMatchedNodeList(List<NetNodeSetMap> matchedNodeList) {
 		System.out.println("dumpMatchedNodeList size: " + matchedNodeList.size());
-		for (NetNodeSet map : matchedNodeList)
+		for (NetNodeSetMap map : matchedNodeList)
 		{
 			for (CyNetwork net : map.keySet())
 			{
@@ -483,14 +479,14 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 		return "";
 	}
 ////
-	private List<NetNodeSet> getMatchedNodeList(final List<CyNetwork> networks) {
+	private List<NetNodeSetMap> getMatchedNodeList(final List<CyNetwork> networks) {
 		int index = 0;
 		if (networks == null)   throw new NullPointerException("networks == null");
 		if (networks.isEmpty())	throw new IllegalArgumentException("No merging network");
 		
 		System.out.println("+++++++++++++++++++ NodeMatch: ");
 
-		final List<NetNodeSet> matchedList = new ArrayList<NetNodeSet>();
+		final List<NetNodeSetMap> matchedList = new ArrayList<NetNodeSetMap>();
 		final int nNet = networks.size();
 
 		for (int i = 0; i < nNet; i++) {
@@ -515,7 +511,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 					//The search for a match has been split for nodes 
 			
 				for (int j = 0; j < n; j++) {
-					final NetNodeSet matchedNodes = matchedList.get(j);
+					final NetNodeSetMap matchedNodes = matchedList.get(j);
 					for (CyNetwork net2 : matchedNodes.keySet())
 					{
 						if (!withinNetworkMerge && net1 == net2)	continue;
@@ -539,7 +535,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 				
 				if (!matched) {
 					// no matched node found, add new map to the list
-					final NetNodeSet matchedNodes = new NetNodeSet();
+					final NetNodeSetMap matchedNodes = new NetNodeSetMap();
 					Set<CyNode> nodes = new HashSet<CyNode>();
 					nodes.add(node1);
 					matchedNodes.put(net1, nodes);
@@ -577,8 +573,8 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 	 * 
 	 * @return list of matched nodes
 	 */
-	private List<NetNodeSet> getMatchedNodeList(
-			final List<NetNodeSet> matchedNodeList,  final Operation op, final List<CyNetwork> networks) 
+	private List<NetNodeSetMap> getMatchedNodeList(
+			final List<NetNodeSetMap> matchedNodeList,  final Operation op, final List<CyNetwork> networks) 
 	{
 		if (matchedNodeList == null)	throw new NullPointerException("matchedGraphObjectsList == null");
 		if (op == null)					throw new NullPointerException("op == null");
@@ -588,21 +584,21 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 		if (op == Operation.UNION) 		return matchedNodeList;
 		
 		if (op == Operation.INTERSECTION) {
-			List<NetNodeSet> list = new ArrayList<NetNodeSet>();
-			for (NetNodeSet map : matchedNodeList) 
+			List<NetNodeSetMap> list = new ArrayList<NetNodeSetMap>();
+			for (NetNodeSetMap map : matchedNodeList) 
 				if (map.map.size() == nnet) // if contained in all the networks
 					list.add(map);
 			return list;
 		} 
  
 		// For Operation.DIFFERENCE
-		final List<NetNodeSet> list = new ArrayList<NetNodeSet>();
+		final List<NetNodeSetMap> list = new ArrayList<NetNodeSetMap>();
 		if (nnet < 2)
 			return list;
 
 		final CyNetwork net1 = networks.get(0);
 		final CyNetwork net2 = networks.get(1);
-		for (NetNodeSet map : matchedNodeList) 
+		for (NetNodeSetMap map : matchedNodeList) 
 			if ((map.containsKey(net1) && !map.containsKey(net2))) 
 				list.add(map);
 		return list;

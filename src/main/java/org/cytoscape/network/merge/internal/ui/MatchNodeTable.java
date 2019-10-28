@@ -36,7 +36,7 @@ import javax.swing.table.TableColumn;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyTable;
-import org.cytoscape.network.merge.internal.model.MatchingAttribute;
+import org.cytoscape.network.merge.internal.model.NetColumnMap;
 
 /**
  * Table for selecting which attribute to use for matching nodes 
@@ -44,10 +44,10 @@ import org.cytoscape.network.merge.internal.model.MatchingAttribute;
 @SuppressWarnings("serial")
 class MatchNodeTable extends JTable {
 	
-    private final MatchingAttribute matchingAttribute;
+    private final NetColumnMap matchingAttribute;
     private final MatchNodeTableModel model;
 
-    public MatchNodeTable(final MatchingAttribute matchingAttribute) {
+    public MatchNodeTable(final NetColumnMap matchingAttribute) {
         this.matchingAttribute = matchingAttribute;
         model = new MatchNodeTableModel();
         setModel(model);

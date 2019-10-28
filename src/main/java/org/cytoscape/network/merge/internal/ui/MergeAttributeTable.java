@@ -50,7 +50,7 @@ import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.model.AttributeMapping;
-import org.cytoscape.network.merge.internal.model.MatchingAttribute;
+import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.util.ColumnType;
 import org.cytoscape.util.swing.LookAndFeelUtil;
 
@@ -61,7 +61,7 @@ import org.cytoscape.util.swing.LookAndFeelUtil;
 class MergeAttributeTable extends JTable {
 
 	private final String nullAttr = "[DELETE THIS]";
-	private MatchingAttribute matchingAttribute;
+	private NetColumnMap matchingAttribute;
 	private AttributeMapping attributeMapping; // attribute mapping
 	private String mergedNetworkName;
 	private MergeAttributeTableModel model;
@@ -69,7 +69,7 @@ class MergeAttributeTable extends JTable {
 	private int indexMatchingAttr; // the index of matching attribute in the attribute mapping
 								   // only used when isNode==true
 
-	public MergeAttributeTable(final AttributeMapping mapping, final MatchingAttribute attribute) {
+	public MergeAttributeTable(final AttributeMapping mapping, final NetColumnMap attribute) {
 		super();
 		isNode = true;
 		indexMatchingAttr = -1;
@@ -263,9 +263,10 @@ class MergeAttributeTable extends JTable {
 
 			Map<CyNetwork, String> netAttrMap = new HashMap<CyNetwork, String>();
 			Set<ColumnType> types = EnumSet.noneOf(ColumnType.class);
-			for (Map.Entry<CyNetwork, CyColumn> entry : matchingAttribute.getNetColumnMap().entrySet()) {
-				netAttrMap.put(entry.getKey(), entry.getValue().getName());
-				types.add(ColumnType.getType(entry.getValue()).toPlain());
+			for (CyNetwork net : matchingAttribute.getNetColumnMap().keySet()) {
+				CyColumn c = matchingAttribute.getNetColumnMap().get(net);
+				netAttrMap.put(net, c.getName());
+				types.add(ColumnType.getType(c).toPlain());
 			}
 
 			attributeMapping.addAttributes(netAttrMap, attr_merged, indexMatchingAttr);

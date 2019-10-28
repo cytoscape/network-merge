@@ -64,9 +64,16 @@ public class AttributeMappingImpl implements AttributeMapping {
     	}
 //    	System.out.print(dumpStrList(mergedAttributes));
    }
-    private String dumpStrList(List<String> list) {
+    public static String dumpStrList(List<String> list) {
 		StringBuilder str = new StringBuilder("[");
 		for (String s : list)
+			str.append(s + ",");
+		str.append("]");
+		return str.toString();
+	}
+    public static String dumpStrs(String[] a) {
+		StringBuilder str = new StringBuilder("[");
+		for (String s : a)
 			str.append(s + ",");
 		str.append("]");
 		return str.toString();
