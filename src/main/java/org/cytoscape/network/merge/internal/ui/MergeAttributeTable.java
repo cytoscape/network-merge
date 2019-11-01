@@ -49,7 +49,7 @@ import javax.swing.table.TableColumn;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyTable;
-import org.cytoscape.network.merge.internal.model.AttributeMapping;
+import org.cytoscape.network.merge.internal.model.AttributeMap;
 import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.util.ColumnType;
 import org.cytoscape.util.swing.LookAndFeelUtil;
@@ -62,14 +62,14 @@ class MergeAttributeTable extends JTable {
 
 	private final String nullAttr = "[DELETE THIS]";
 	private NetColumnMap matchingAttribute;
-	private AttributeMapping attributeMapping; // attribute mapping
+	private AttributeMap attributeMapping; // attribute mapping
 	private String mergedNetworkName;
 	private MergeAttributeTableModel model;
 	private boolean isNode;
 	private int indexMatchingAttr; // the index of matching attribute in the attribute mapping
 								   // only used when isNode==true
 
-	public MergeAttributeTable(final AttributeMapping mapping, final NetColumnMap attribute) {
+	public MergeAttributeTable(final AttributeMap mapping, final NetColumnMap attribute) {
 		super();
 		isNode = true;
 		indexMatchingAttr = -1;
@@ -81,7 +81,7 @@ class MergeAttributeTable extends JTable {
 		setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	}
 
-	public MergeAttributeTable(final AttributeMapping attribute) {
+	public MergeAttributeTable(final AttributeMap attribute) {
 		super();
 		mergedNetworkName = "Merged Network";
 		attributeMapping = attribute;

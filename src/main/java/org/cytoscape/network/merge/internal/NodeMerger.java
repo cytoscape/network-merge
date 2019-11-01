@@ -20,27 +20,32 @@ public class NodeMerger {
 		this.conflictCollector = conflictCollector;
 	}
 
-	public void mergeAttribute(Map<CyNode, CyColumn> nodeColMap, CyNode node, CyColumn targetColumn, CyNetwork targetNet) 
+	public void mergeAttribute(Map<CyNode, CyColumn> nodeColMap, CyNode node, CyColumn targetColumn, CyColumn countColumn, CyNetwork targetNet) 
 	{
-		if ((nodeColMap == null) || (node == null) || (targetColumn == null) || (targetNet == null))
-			throw new java.lang.IllegalArgumentException("Required parameters cannot be null.");
+	
+		if (Merge.verbose) System.out.println("mergeAttribute " + (node == null ? "NULLNODE" : node.getSUID()) + " " + (targetColumn == null ? "NULLTARGET" : targetColumn.getName()));
+		if (nodeColMap == null) 	return;
+		if (node == null) 			return;
+		if (targetColumn == null) 	return;
+		if (targetNet == null) 		return;
 
-//		System.out.println("NodeMerger.mergeAttribute: " + targetColumn.getName());
+
+		if (Merge.verbose) System.out.println("NodeMerger.mergeAttribute: " + targetColumn.getName());
 
 		for (CyNode from : nodeColMap.keySet()) {
-//			AttributeBasedNetworkMerge.dumpRow(from);
+			Merge.dumpRow(from);
 			final CyColumn fromColumn = nodeColMap.get(from);
-//			final CyRow fromCyRow = fromTable.getRow(from.getSUID());			
-			merge(from, fromColumn, targetNet, node, targetColumn);
+			if (Merge.verbose) System.out.println("merge: " + fromColumn.getName() + " " + node.getSUID() + " " + targetNet.getSUID() + " " + targetColumn.getName());
+			merge(from, fromColumn, targetNet, node, targetColumn, countColumn);
 		}
 	}
 	
-	private void merge(CyNode from, CyColumn fromColumn, CyNetwork targetNet, CyNode target, CyColumn targetColumn) {
+	private void merge(CyNode from, CyColumn fromColumn, CyNetwork targetNet, CyNode target, CyColumn targetColumn, CyColumn countColumn) {
 		
-		if (from == null) throw new NullPointerException("from");
-		if (target == null) throw new NullPointerException("target");
-		if (from == fromColumn) throw new NullPointerException("fromColumn");
-		if (target == targetColumn) throw new NullPointerException("targetColumn");
+		if (from == null) 			return;
+		if (target == null) 		return;
+		if (from == fromColumn) 	return;
+		if (target == targetColumn) return;
 
 		final ColumnType targColType = ColumnType.getType(targetColumn);
 		final ColumnType fromColType = ColumnType.getType(fromColumn);
@@ -57,7 +62,10 @@ public class NodeMerger {
 			
 //			System.out.println("mergeAttribute: " + fromValue + " - " + o2);
 			if (o2 == null || o2.length() == 0)  // null or empty attribute
+			{
 				targetRow.set(targetColumn.getName(), fromValue);							// <-------
+				if (countColumn != null) targetRow.set(countColumn.getName(), 1);							// <-------
+			}
 			else if (fromValue != null && fromValue.equals(o2)) { } // the same, do nothing
 			else  if (conflictCollector != null)
 					conflictCollector.addConflict(from, fromColumn, target, targetColumn);
@@ -68,7 +76,11 @@ public class NodeMerger {
 				o1 = targColType.castService(o1);
 
 			Object o2 = targetRow.get(targetColumn.getName(), targColType.getType());
-			if (o2 == null) 	targetRow.set(targetColumn.getName(), o1);					// <-------
+			if (o2 == null) 
+			{
+				targetRow.set(targetColumn.getName(), o1);					// <-------
+				if (countColumn != null) targetRow.set(countColumn.getName(), 2);			
+			}
 			else if (o1.equals(o2)) {}
 			else if (conflictCollector != null)
 					conflictCollector.addConflict(from, fromColumn, target, targetColumn);
@@ -90,7 +102,10 @@ public class NodeMerger {
 					if (!l2.contains(o1)) 
 						l2.add(o1);
 				if (!l2.isEmpty()) 
-						targetRow.set(targetColumn.getName(), l2);		// <-------
+				{
+					targetRow.set(targetColumn.getName(), l2);		// <-------
+					if (countColumn != null) targetRow.set(countColumn.getName(), l2.size());		// <-------
+				}
 				}
 			} else { // from list
 				final ColumnType fromPlain = fromColType.toPlain();
@@ -111,7 +126,10 @@ public class NodeMerger {
 			}
 
 			if(!l2.isEmpty()) 
+			{
 				targetRow.set(targetColumn.getName(), l2);		// <-------
+				if (countColumn != null) targetRow.set(countColumn.getName(), l2.size());		// <-------
+			}
 		}
 	}
 

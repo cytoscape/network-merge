@@ -31,12 +31,12 @@ import java.util.Set;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
-import org.cytoscape.network.merge.internal.AttributeBasedNetworkMerge;
 import org.cytoscape.network.merge.internal.EdgeMerger;
+import org.cytoscape.network.merge.internal.Merge;
 import org.cytoscape.network.merge.internal.NetworkMerge.Operation;
 import org.cytoscape.network.merge.internal.NodeMerger;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollector;
-import org.cytoscape.network.merge.internal.model.AttributeMapping;
+import org.cytoscape.network.merge.internal.model.AttributeMap;
 import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeValueMatcher;
@@ -55,8 +55,8 @@ public class NetworkMergeTask extends AbstractTask {
 	final private CreateNetworkViewTaskFactory netViewCreator;
 
 	private NetColumnMap matchingAttribute;
-	private AttributeMapping nodeAttributeMapping;
-	private AttributeMapping edgeAttributeMapping;
+	private AttributeMap nodeAttributeMapping;
+	private AttributeMap edgeAttributeMapping;
 
 	private boolean inNetworkMerge;
 
@@ -64,7 +64,7 @@ public class NetworkMergeTask extends AbstractTask {
 	private final CyNetworkManager networkManager;
 	private final String networkName;
 	
-	private AttributeBasedNetworkMerge networkMerge;
+	private Merge networkMerge;
 private boolean asCommand;
 	/**
 	 * Constructor.<br>
@@ -74,8 +74,8 @@ private boolean asCommand;
 			final CyNetworkManager networkManager,
 			final String networkName, 
 			final NetColumnMap matchingAttribute,
-			final AttributeMapping nodeAttributeMapping, 
-			final AttributeMapping edgeAttributeMapping,
+			final AttributeMap nodeAttributeMapping, 
+			final AttributeMap edgeAttributeMapping,
 			final List<CyNetwork> selectedNetworkList, 
 			final Operation operation, 
 			final boolean subtractOnlyUnconnectedNodes, 
@@ -106,7 +106,7 @@ private boolean asCommand;
 		if(networkMerge != null)
 			this.networkMerge.interrupt();
 	}
-static boolean verbose = true;
+static boolean verbose = Merge.verbose;
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
 	
@@ -126,7 +126,7 @@ static boolean verbose = true;
 		final EdgeMerger edgeMerger = new EdgeMerger(conflictCollector);
 		final AttributeValueMatcher attributeValueMatcher = new DefaultAttributeValueMatcher();
 
-		networkMerge = new AttributeBasedNetworkMerge(
+		networkMerge = new Merge(
 				matchingAttribute, 
 				nodeAttributeMapping, 
 				edgeAttributeMapping,

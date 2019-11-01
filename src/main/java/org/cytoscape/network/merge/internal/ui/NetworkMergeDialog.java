@@ -33,11 +33,10 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.AbstractListModel;
 import javax.swing.BorderFactory;
@@ -47,7 +46,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -74,8 +72,7 @@ import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.network.merge.internal.NetworkMerge.Operation;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollector;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollectorImpl;
-import org.cytoscape.network.merge.internal.model.AttributeMapping;
-import org.cytoscape.network.merge.internal.model.AttributeMappingImpl;
+import org.cytoscape.network.merge.internal.model.AttributeMap;
 import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.task.NetworkMergeTask;
 import org.cytoscape.session.CyNetworkNaming;
@@ -132,8 +129,8 @@ public class NetworkMergeDialog extends JDialog {
 	private final TreeMap<Operation, AbstractButton> operationButtons;
 //	private Map<String, Map<String, Set<String>>> selectedNetAttrIDType;
 	
-	private final AttributeMapping nodeAttrMapping;
-	private final AttributeMapping edgeAttrMapping;
+	private final AttributeMap nodeAttrMapping;
+	private final AttributeMap edgeAttrMapping;
 	private final NetColumnMap matchingAttr;
 //	boolean checkCyThesaurus;
 	
@@ -160,8 +157,8 @@ public class NetworkMergeDialog extends JDialog {
 		
 		operationButtons = new TreeMap<>();
 		matchingAttr = new NetColumnMap();
-		nodeAttrMapping = new AttributeMappingImpl();
-		edgeAttrMapping = new AttributeMappingImpl();
+		nodeAttrMapping = new AttributeMap();
+		edgeAttrMapping = new AttributeMap();
 
 		initComponents();
 		updateOKButton();
