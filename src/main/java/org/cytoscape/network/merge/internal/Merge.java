@@ -715,7 +715,7 @@ public class Merge  {
 			{
 				boolean isJoinColumn = matchingAttribute.contains(net, attribute);
 				if (isJoinColumn)
-					nodeMerger.mergeAttribute(nodeToColMap, targetNode, matchColumn, countColumn, targetNetwork);
+					nodeMerger.mergeAttribute(nodeToColMap, targetNode, matchColumn, countColumn);
 			}
 		}
 		if (Merge.verbose) System.out.println("Node Merged");

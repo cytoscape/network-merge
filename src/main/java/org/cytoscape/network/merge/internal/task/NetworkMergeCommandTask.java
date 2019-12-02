@@ -8,13 +8,16 @@ import java.util.List;
 import java.util.Set;
 
 import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.Merge;
 import org.cytoscape.network.merge.internal.NetworkMerge;
+import org.cytoscape.network.merge.internal.NodeSpec;
 import org.cytoscape.network.merge.internal.model.AttributeMap;
 import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.util.ColumnType;
@@ -308,6 +311,56 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		return netName;
 		
 	}
+	
+	//---------------------------------------------------------------------
+	public static String getNodeName(NodeSpec spec)
+	{
+		return getNodeName(spec.getNet(), spec.getNode());
+	}
+	//---------------------------------------------------------------------
+	public static String getNodeName(CyNetwork net, CyNode node)
+	{
+		if (net == null) return "No Net";
+		if (node == null) return "No node";
+		String ret = "" + node.getSUID();
+		try
+		{
+			CyTable table = net.getDefaultNodeTable();
+			CyRow row = table.getRow(node);
+			if (row != null)
+			ret = row.get(CyNetwork.NAME, String.class) + " [" + node.getSUID() + "]";
+		}
+		catch(Exception e) {}
+		return ret;
+	}
+//	//---------------------------------------------------------------------
+//	public static String getNodeName(CyNode node)
+//	{
+//		CyNetwork net = node.getNetworkPointer();
+//		return net.getRow(node).get(CyNetwork.NAME, String.class);
+//		
+//	}
+	//---------------------------------------------------------------------
+	public static String getNetAndNodeName(CyNode node)
+	{
+		CyNetwork net = node.getNetworkPointer();
+		return (net == null) ? "" + node.getSUID() : (getNetworkName(net) + ":" + getNodeName(net, node));
+		
+	}
+	//---------------------------------------------------------------------
+	public static String edgeName(CyNetwork net, CyEdge edge)
+	{
+		return getNodeName(net,edge.getSource()) + " -> " + getNodeName(net,edge.getTarget());
+		
+	}
+	
+	public static String getEdgeSet(CyNetwork netw, Set<CyEdge> edgeSet) {
+		
+		StringBuilder build = new StringBuilder( "[");
+		for (CyEdge e : edgeSet)
+			build.append(edgeName(netw, e)).append(", ");
+		return build.toString() + "]";
+	}
 	//---------------------------------------------------------------------
 	//nodeColumns="{display name,name,new display,String},{...}" #n+2
 
@@ -462,5 +515,6 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 	
 	public void cancel() {
 	}
+
 
 }

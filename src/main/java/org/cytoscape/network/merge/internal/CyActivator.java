@@ -78,19 +78,19 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, networkMergeAction, CyAction.class, props); 
 	
 		
-		
-        String version = "3.5.0";
-        VersionTaskFactory versionTask = new VersionTaskFactory(version);
-		props = new Properties();
-		props.setProperty(COMMAND_NAMESPACE, "network");
-		props.setProperty(COMMAND, "merge.version");
-		props.setProperty(COMMAND_DESCRIPTION, "Show version");
-		props.setProperty(COMMAND_LONG_DESCRIPTION, "Display the version of the merge app.");
-		props.setProperty(COMMAND_SUPPORTS_JSON, "true");
-		props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"3.5.0\"}");
-		registerService(bc, versionTask, TaskFactory.class, props); 
-		
-		
+//		
+//        String version = "3.5.0";
+//        VersionTaskFactory versionTask = new VersionTaskFactory(version);
+//		props = new Properties();
+//		props.setProperty(COMMAND_NAMESPACE, "network");
+//		props.setProperty(COMMAND, "merge.version");
+//		props.setProperty(COMMAND_DESCRIPTION, "Show version");
+//		props.setProperty(COMMAND_LONG_DESCRIPTION, "Display the version of the merge app.");
+//		props.setProperty(COMMAND_SUPPORTS_JSON, "true");
+//		props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"3.5.0\"}");
+//		registerService(bc, versionTask, TaskFactory.class, props); 
+//		
+//		
 		
         final CyServiceRegistrar registrar = getService(bc, CyServiceRegistrar.class);
 
