@@ -10,6 +10,7 @@ import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollector;
+import org.cytoscape.network.merge.internal.task.NetworkMergeCommandTask;
 import org.cytoscape.network.merge.internal.util.ColumnType;
 
 public class NodeMerger {
@@ -23,20 +24,20 @@ public class NodeMerger {
 	public void mergeAttribute(Map<CyNode, CyColumn> nodeColMap, CyNode node, CyColumn targetColumn, CyColumn countColumn, CyNetwork targetNet) 
 	{
 	
-		if (Merge.verbose) System.out.println("mergeAttribute " + (node == null ? "NULLNODE" : node.getSUID()) + " " + (targetColumn == null ? "NULLTARGET" : targetColumn.getName()));
+//		if (Merge.verbose) System.out.println("mergeAttribute " + (node == null ? "NULLNODE" : node.getSUID()) + " " + (targetColumn == null ? "NULLTARGET" : targetColumn.getName()));
 		if (nodeColMap == null) 	return;
 		if (node == null) 			return;
 		if (targetColumn == null) 	return;
 		if (targetNet == null) 		return;
 
 
-		if (Merge.verbose) System.out.println("NodeMerger.mergeAttribute: " + targetColumn.getName());
+//		if (Merge.verbose) System.out.println("NodeMerger.mergeAttribute: " + targetColumn.getName());
 
-		for (CyNode from : nodeColMap.keySet()) {
-			Merge.dumpRow(from);
-			final CyColumn fromColumn = nodeColMap.get(from);
-			if (Merge.verbose) System.out.println("merge: " + fromColumn.getName() + " " + node.getSUID() + " " + targetNet.getSUID() + " " + targetColumn.getName());
-			merge(from, fromColumn, targetNet, node, targetColumn, countColumn);
+		for (CyNode source : nodeColMap.keySet()) {
+//			Merge.dumpRow(source);
+			final CyColumn fromColumn = nodeColMap.get(source);
+//			if (Merge.verbose) System.out.println("merge: " + fromColumn.getName() + " " + node.getSUID() + " " + targetNet.getSUID() + " " + targetColumn.getName());
+			merge(source, fromColumn, targetNet, node, targetColumn, countColumn);
 		}
 	}
 	
@@ -69,12 +70,12 @@ public class NodeMerger {
 			else if (fromValue != null && fromValue.equals(o2)) { } // the same, do nothing
 			else  if (conflictCollector != null)
 					conflictCollector.addConflict(from, fromColumn, target, targetColumn);
-		} else if (!targColType.isList()) { // simple type (Integer, Long,
-										// Double, Boolean)
+		} else if (!targColType.isList()) 
+		{ // simple type (Integer, Long, Double, Boolean)
 			Object o1 = fromCyRow.get(fromColumn.getName(), fromColType.getType());
 			if (fromColType != targColType) 
 				o1 = targColType.castService(o1);
-
+			if (o1 == null) return;
 			Object o2 = targetRow.get(targetColumn.getName(), targColType.getType());
 			if (o2 == null) 
 			{

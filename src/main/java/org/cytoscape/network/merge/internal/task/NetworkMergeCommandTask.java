@@ -68,14 +68,14 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 
 		@Tunable(
 				description="Source Networks", context="nogui", 
-				longDescription="The names of the input network", 
+				longDescription="The comma-delimited names of the input network", 
 				exampleStringValue="a, b")
 		public String sources;
 
 		@Tunable(
 				description = "Node Columns", context= Tunable.NOGUI_CONTEXT,
-				longDescription="The list of node attributes needed to match across source networks", 
-				exampleStringValue = "name , shared name, Betweenness"
+				longDescription="The comma-delimited, order-dependent list of node attributes needed to match across source networks", 
+				exampleStringValue = "name , shared name"
 		)
 	public  String nodeKeys;
 
@@ -182,11 +182,11 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		//nodeColumns="{net1_name,net2_name,new_name,String},{...}" #n+2
 		//edgeColumns="{n1 col,n2 col,merged net col,merged net col type},{...}" #n+2
 		
-		String tgtType = "";
+//		String tgtType = "";
 		final TaskManager<?, ?> taskMgr = registrar.getService(SynchronousTaskManager.class);
-		final NetworkMergeTask nmTask = new NetworkMergeTask(cyNetworkFactory, cnm, netName, matchingAttribute,
-				nodeAttributeMapping, edgeAttributeMapping, networkList, op, useDiference, null, 
-				tgtType, inNetworkMerge, true, netViewCreator);	
+		final NetworkMergeTask nmTask = new NetworkMergeTask(cyNetworkFactory, cnm, netName, 
+				matchingAttribute,	nodeAttributeMapping, edgeAttributeMapping, networkList, 
+				op, useDiference, null, inNetworkMerge, true, netViewCreator);	
 
 	      final TaskIterator taskIterator = new TaskIterator(nmTask);
 	      taskIterator.append(new AbstractTask() {
@@ -233,7 +233,7 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 				CyColumn column = net.getDefaultNodeTable().getColumn(colname);
 				if (column != null)
 				{
-					joinColumns.putAttributeForMatching(net, column);
+					joinColumns.put(net, column);
 					if (verbose) System.out.println(" putting: " + column.getName() + " for " + net.getSUID());
 				}
 				else System.out.println(" not found:  ");
@@ -301,67 +301,6 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 	}
 
 	//---------------------------------------------------------------------
-	public static String getNetworkName(CyNetwork net)
-	{
-		CyTable table = net.getDefaultNetworkTable();
-		if (table == null)return "ERR1";
-		CyRow row = table.getAllRows().get(0);
-		if (row == null) return "ERR2";
-		String netName = row.get("name", String.class);
-		return netName;
-		
-	}
-	
-	//---------------------------------------------------------------------
-	public static String getNodeName(NodeSpec spec)
-	{
-		return getNodeName(spec.getNet(), spec.getNode());
-	}
-	//---------------------------------------------------------------------
-	public static String getNodeName(CyNetwork net, CyNode node)
-	{
-		if (net == null) return "No Net";
-		if (node == null) return "No node";
-		String ret = "" + node.getSUID();
-		try
-		{
-			CyTable table = net.getDefaultNodeTable();
-			CyRow row = table.getRow(node);
-			if (row != null)
-			ret = row.get(CyNetwork.NAME, String.class) + " [" + node.getSUID() + "]";
-		}
-		catch(Exception e) {}
-		return ret;
-	}
-//	//---------------------------------------------------------------------
-//	public static String getNodeName(CyNode node)
-//	{
-//		CyNetwork net = node.getNetworkPointer();
-//		return net.getRow(node).get(CyNetwork.NAME, String.class);
-//		
-//	}
-	//---------------------------------------------------------------------
-	public static String getNetAndNodeName(CyNode node)
-	{
-		CyNetwork net = node.getNetworkPointer();
-		return (net == null) ? "" + node.getSUID() : (getNetworkName(net) + ":" + getNodeName(net, node));
-		
-	}
-	//---------------------------------------------------------------------
-	public static String edgeName(CyNetwork net, CyEdge edge)
-	{
-		return getNodeName(net,edge.getSource()) + " -> " + getNodeName(net,edge.getTarget());
-		
-	}
-	
-	public static String getEdgeSet(CyNetwork netw, Set<CyEdge> edgeSet) {
-		
-		StringBuilder build = new StringBuilder( "[");
-		for (CyEdge e : edgeSet)
-			build.append(edgeName(netw, e)).append(", ");
-		return build.toString() + "]";
-	}
-	//---------------------------------------------------------------------
 	//nodeColumns="{display name,name,new display,String},{...}" #n+2
 
 	private AttributeMap buildNodeAttributeMapping() {
@@ -399,8 +338,8 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		AttributeMap edgeAttributeMapping = new AttributeMap();
 		for (CyNetwork net : networkList)
 		{
-			CyTable nodeTable = net.getDefaultEdgeTable();
-			edgeAttributeMapping.addNetwork(net, nodeTable);
+			CyTable edgeTable = net.getDefaultEdgeTable();
+			edgeAttributeMapping.addNetwork(net, edgeTable);
 		}
 		
 		for (int col = 0; col < edgeMap.columnsToMerge.size(); col++) 
@@ -411,76 +350,74 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 				CyNetwork net = networkList.get(i);
 				edgeAttributeMapping.setOriginalAttribute(net, rec.columnNames.get(net), rec.outName);
 			}
-			edgeAttributeMapping.setMergedAttribute(col, rec.outName);
-			edgeAttributeMapping.setMergedAttributeType(col, rec.outType);
+			edgeAttributeMapping.setColumnMerge(col, rec);
 		}
 		return edgeAttributeMapping;
 	}
 	
-
 	//---------------------------------------------------------------------
-	class MergeMap 
+	public static String getNetworkName(CyNetwork net)
 	{
-		List<CyNetwork> sourceNetworks;
-		List<ColumnMergeRecord> columnsToMerge = new ArrayList<ColumnMergeRecord>();
+		CyTable table = net.getDefaultNetworkTable();
+		if (table == null)return "ERR1";
+		CyRow row = table.getAllRows().get(0);
+		if (row == null) return "ERR2";
+		String netName = row.get("name", String.class);
+		return netName;
 		
-		MergeMap(String s, List<CyNetwork> nets)
-		{
-			if (s == null) 	{	if (verbose) System.out.println("no merge map defined"); return;		}
-			if (verbose) 	System.out.println("MergeMap: " + s + ", netsize= " + nets.size());
-			sourceNetworks = nets;
-			int ptr = 0;
-			while (ptr >= 0)		// parse "{ a, b }" into columnsToMerge list
-			{
-				int start = s.indexOf('{', ptr);
-				int end = s.indexOf('}', start+1);
-				if (start >= 0 && end > 0)
-				{
-					String chunk = s.substring(start+1, end);
-					ColumnMergeRecord rec = new ColumnMergeRecord(chunk, nets);
-					columnsToMerge.add(rec);
-				}
-				ptr = s.indexOf(',', end+1);
-			}
-		}
-		
-		//--------------------------------------------
-		public void dump() {
-			for (ColumnMergeRecord rec : columnsToMerge)
-				rec.dump();
-		}
 	}
 	
 	//---------------------------------------------------------------------
-	class ColumnMergeRecord 
+	public static String getNodeName(NodeSpec spec)
 	{
-		HashMap<CyNetwork, String> columnNames = new HashMap<CyNetwork, String>();
-		String outName;
-		ColumnType outType;
-		
-		ColumnMergeRecord(String str, List<CyNetwork> netw)
-		{
-			String[] names = str.split(",");
-			int size = names.length;
-			if (size != netw.size() + 2)
-				throw new IllegalArgumentException("Wrong number of arguments, given size of network list");
-			for (int i=0; i<size-2; i++)
-				columnNames.put(netw.get(i), names[i]);
-			outName = names[size-2];
-			outType = ColumnType.STRING;
-			
-			System.out.println();
-			
-		}
-		
-		void dump()
-		{
-			System.out.println(outName + " # " + outType.toString());
-			for (CyNetwork net : columnNames.keySet())
-				System.out.println(getNetworkName(net) + ": " + columnNames.get(net));
-			System.out.println("\n");
-		}
+		return getNodeName(spec.getNet(), spec.getNode());
 	}
+	//---------------------------------------------------------------------
+	public static String getNodeName(CyNetwork net, CyNode node)
+	{
+		if (net == null) return "No Net";
+		if (node == null) return "No node";
+		String ret = "" + node.getSUID();
+		try
+		{
+			CyTable table = net.getDefaultNodeTable();
+			CyRow row = table.getRow(node.getSUID());
+			if (row != null)
+			ret = row.get(CyNetwork.NAME, String.class) + " [" + node.getSUID() + "]";
+		}
+		catch(Exception e) { e.printStackTrace();}
+		return ret;
+	}
+//	//---------------------------------------------------------------------
+//	public static String getNodeName(CyNode node)
+//	{
+//		CyNetwork net = node.getNetworkPointer();
+//		return net.getRow(node).get(CyNetwork.NAME, String.class);
+//		
+//	}
+	//---------------------------------------------------------------------
+	public static String getNetAndNodeName(CyNode node)
+	{
+		CyNetwork net = node.getNetworkPointer();
+		return (net == null) ? "" + node.getSUID() : (getNetworkName(net) + ":" + getNodeName(net, node));
+		
+	}
+	//---------------------------------------------------------------------
+	public static String edgeName(CyNetwork net, CyEdge edge)
+	{
+		return getNodeName(net,edge.getSource()) + " -> " + getNodeName(net,edge.getTarget());
+		
+	}
+	
+	public static String getEdgeSet(CyNetwork netw, Set<CyEdge> edgeSet) {
+		
+		StringBuilder build = new StringBuilder( "[");
+		for (CyEdge e : edgeSet)
+			build.append(edgeName(netw, e)).append(", ");
+		return build.toString() + "]";
+	}
+
+	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
 	private void dumpInfo() {
 		System.out.println("sources: " + sources);

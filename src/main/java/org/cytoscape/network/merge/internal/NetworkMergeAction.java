@@ -25,6 +25,7 @@ package org.cytoscape.network.merge.internal;
  */
 
 import java.awt.Dialog;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 
 import org.cytoscape.application.CyApplicationManager;
@@ -81,6 +82,9 @@ public class NetworkMergeAction extends AbstractCyAction {
 
 		final NetworkMergeDialog dialog = new NetworkMergeDialog(cnm, cnf, cnn, taskManager, iconMgr, netViewCreator);
 		dialog.setLocationRelativeTo(swingApp.getJFrame());
+Point pt = dialog.getLocationOnScreen();
+pt.y -= 50;
+dialog.setLocation(pt);
 		dialog.setModalityType(Dialog.DEFAULT_MODALITY_TYPE);
 		dialog.setVisible(true);
 	}

@@ -830,7 +830,7 @@ public class NetworkMergeDialog extends JDialog {
 //					((NetColumnMap) matchingAttr).dump("create NetworkMergeTask");
 					final NetworkMergeTask nmTask = new NetworkMergeTask(cnf, cnm, netName, matchingAttr,
 							nodeAttrMapping, edgeAttrMapping, selectedNetData.getNetworkList(),
-							getOperation(), getDifference1Btn().isSelected(), conflictCollector, tgtType,   //, selectedNetAttrIDType
+							getOperation(), getDifference1Btn().isSelected(), conflictCollector, //tgtType,   //, selectedNetAttrIDType
 							getInNetMergeCkb().isSelected(), false, netViewCreator);
 
 					final TaskIterator ti = new TaskIterator(nmTask);
@@ -882,19 +882,19 @@ public class NetworkMergeDialog extends JDialog {
 	private void addRemoveAttributeMapping(CyNetwork network, boolean isAdd) {
 
 		if (isAdd) {
-			nodeAttrMapping.addNetwork(network, network.getDefaultNodeTable()); // TODO:
+//			nodeAttrMapping.addNetwork(network, network.getDefaultNodeTable()); // TODO:
 																						// make
 																						// the
 																						// table
 																						// an
 																						// user
 																						// option?
-			edgeAttrMapping.addNetwork(network, network.getDefaultEdgeTable());
-			matchingAttr.addNetwork(network);
+//			edgeAttrMapping.addNetwork(network, network.getDefaultEdgeTable());
+//			matchingAttr.addNetwork(network);
 		} else {
-			nodeAttrMapping.removeNetwork(network);
-			edgeAttrMapping.removeNetwork(network);
-			matchingAttr.removeNetwork(network);
+//			nodeAttrMapping.removeNetwork(network);
+//			edgeAttrMapping.removeNetwork(network);
+//			matchingAttr.removeNetwork(network);
 		}
 	}
 

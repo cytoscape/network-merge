@@ -21,33 +21,33 @@ public class EdgeMerger  {
 		this.conflictCollector = conflictCollector;
 	}
 	
-	public <CyEdge extends CyIdentifiable> void mergeAttribute(final Map<CyEdge, CyColumn> mapGOAttr, final CyEdge graphObject, final CyColumn column,
+	public <CyEdge extends CyIdentifiable> void mergeAttribute(final Map<EdgeSpec, CyColumn> edgeColumnMap, final CyEdge targetEdge, final CyColumn targetColumn,
 			final CyNetwork network) {
-		if ((mapGOAttr == null) || (graphObject == null) || (column == null) || (network == null))
+		if ((edgeColumnMap == null) || (targetEdge == null) || (targetColumn == null) || (network == null))
 			throw new java.lang.IllegalArgumentException("Required parameters cannot be null.");
 
-		final CyRow cyRow = network.getRow(graphObject);
-		final ColumnType colType = ColumnType.getType(column);
+		final CyRow cyRow = network.getRow(targetEdge);
+		final ColumnType colType = ColumnType.getType(targetColumn);
 
-		for (Map.Entry<CyEdge, CyColumn> entryGOAttr : mapGOAttr.entrySet()) {
-			final CyEdge from = entryGOAttr.getKey();
-			final CyColumn fromColumn = entryGOAttr.getValue();
+		for (EdgeSpec from : edgeColumnMap.keySet()) {
+//			final CyEdge from = entryGOAttr.getKey();
+			final CyColumn fromColumn = edgeColumnMap.get(from);
 			final CyTable fromTable = fromColumn.getTable();
-			final CyRow fromCyRow = fromTable.getRow(from.getSUID());
+			final CyRow fromCyRow = fromTable.getRow(from.edge.getSUID());
 			final ColumnType fromColType = ColumnType.getType(fromColumn);
 
 			if (colType == ColumnType.STRING) {
 				final String fromValue = fromCyRow.get(fromColumn.getName(), String.class);
-				final String o2 = cyRow.get(column.getName(), String.class);
+				final String o2 = cyRow.get(targetColumn.getName(), String.class);
 				
 				if (o2 == null || o2.length() == 0) { // null or empty attribute
-					cyRow.set(column.getName(), fromValue);
+					cyRow.set(targetColumn.getName(), fromValue);
 				} else if (fromValue != null && fromValue.equals(o2)) { // TODO: necessary?
 					// the same, do nothing
 				} else { // attribute conflict
 					// add to conflict collector
 					if (conflictCollector != null)
-						conflictCollector.addConflict(from, fromColumn, graphObject, column);
+						conflictCollector.addConflict(from.edge, fromColumn, targetEdge, targetColumn);
 				}
 			} else if (!colType.isList()) { // simple type (Integer, Long,
 											// Double, Boolean)
@@ -56,9 +56,9 @@ public class EdgeMerger  {
 					o1 = colType.castService(o1);
 				}
 
-				Object o2 = cyRow.get(column.getName(), colType.getType());
+				Object o2 = cyRow.get(targetColumn.getName(), colType.getType());
 				if (o2 == null) {
-					cyRow.set(column.getName(), o1);
+					cyRow.set(targetColumn.getName(), o1);
 					// continue;
 				} else if (o1.equals(o2)) {
 					// continue; // the same, do nothing
@@ -66,14 +66,14 @@ public class EdgeMerger  {
 
 					// add to conflict collector
 					if (conflictCollector != null)
-						conflictCollector.addConflict(from, fromColumn, graphObject, column);
+						conflictCollector.addConflict(from.edge, fromColumn, targetEdge, targetColumn);
 					// continue;
 				}
 			} else { // toattr is list type
 				// TODO: use a conflict handler to handle this part?
 				ColumnType plainType = colType.toPlain();
 
-				List l2 = cyRow.getList(column.getName(), plainType.getType());
+				List l2 = cyRow.getList(targetColumn.getName(), plainType.getType());
 				if (l2 == null) {
 					l2 = new ArrayList<Object>();
 				}
@@ -91,7 +91,7 @@ public class EdgeMerger  {
 						}
 
 						if (!l2.isEmpty()) {
-							cyRow.set(column.getName(), l2);
+							cyRow.set(targetColumn.getName(), l2);
 						}
 					}
 				} else { // from list
@@ -117,7 +117,7 @@ public class EdgeMerger  {
 				}
 
 				if(!l2.isEmpty()) {
-					cyRow.set(column.getName(), l2);
+					cyRow.set(targetColumn.getName(), l2);
 				}
 			}
 		}

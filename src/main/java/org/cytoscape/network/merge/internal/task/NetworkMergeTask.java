@@ -80,7 +80,7 @@ private boolean asCommand;
 			final Operation operation, 
 			final boolean subtractOnlyUnconnectedNodes, 
 			final AttributeConflictCollector conflictCollector,
-			final String tgtType,   //final Map<String, Map<String, Set<String>>> selectedNetworkAttributeIDType,
+//			final String tgtType,   //final Map<String, Map<String, Set<String>>> selectedNetworkAttributeIDType,
 			final boolean inNetworkMerge, 
 			final boolean asCommand, 
 			final CreateNetworkViewTaskFactory netViewCreator) 

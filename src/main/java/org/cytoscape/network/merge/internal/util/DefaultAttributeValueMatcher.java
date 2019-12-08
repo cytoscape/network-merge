@@ -55,17 +55,18 @@ public class DefaultAttributeValueMatcher implements AttributeValueMatcher {
 		Class<?> type1 = attr1.getType();
 		Class<?> type2 = attr2.getType();
 
+		
 		// only support matching between simple types and simple lists
 		if (!List.class.isAssignableFrom(type1) && !List.class.isAssignableFrom(type2)) {
 			// simple type
 			final Object val1 = row1.get(attr1.getName(), type1);
 			final Object val2 = row2.get(attr2.getName(), type2);
+	
+			System.out.println(val1 + " =? " + val2);
+			if(val1 == null || val2 == null) 		return false;
+			if ("".equals(val1) || "".equals(val2)) return false;
+			return val1.equals(val2);
 			
-			if(val1 == null || val2 == null) {
-				return false;
-			} else {
-				return val1.equals(val2);
-			}
 		} else {
 			if (!List.class.isAssignableFrom(type1) || !List.class.isAssignableFrom(type2)) {
 				// then one is simple type the other is simple list

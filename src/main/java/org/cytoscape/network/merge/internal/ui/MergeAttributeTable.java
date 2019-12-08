@@ -229,7 +229,7 @@ class MergeAttributeTable extends JTable {
 				JTableHeader header = (JTableHeader) e.getSource();
 				JTable table = header.getTable();
 				int columnIndex = header.columnAtPoint(e.getPoint());
-				if (columnIndex == attributeMapping.getSizeNetwork()) { // the merged network
+				if (columnIndex == attributeMapping.size()) { // the merged network
 					String title = JOptionPane.showInputDialog(table.getParent(),
 							"Input the title for the merged network");
 					if (title != null && title.length() != 0) {
@@ -281,7 +281,7 @@ class MergeAttributeTable extends JTable {
 
 			while (it.hasNext()) {
 				CyNetwork network = it.next();
-				String attr = matchingAttribute.getColumn(network).getName();
+				String attr = matchingAttribute.get(network).getName();
 				String old = attributeMapping.setOriginalAttribute(network, attr, indexMatchingAttr);
 				if (attr.compareTo(old) != 0) 
 					update = true;
@@ -298,15 +298,15 @@ class MergeAttributeTable extends JTable {
 	}
 
 	protected boolean isColumnOriginalNetwork(final int col) {
-		return col >= 0 && col < attributeMapping.getSizeNetwork();
+		return col >= 0 && col < attributeMapping.size();
 	}
 
 	protected boolean isColumnMergedNetwork(final int col) {
-		return col == attributeMapping.getSizeNetwork();
+		return col == attributeMapping.size();
 	}
 
 	protected boolean isColumnMergedType(final int col) {
-		return col == attributeMapping.getSizeNetwork() + 1;
+		return col == attributeMapping.size() + 1;
 	}
 
 	// table model
@@ -319,14 +319,14 @@ class MergeAttributeTable extends JTable {
 
 		// @Override
 		public int getColumnCount() {
-			final int n = attributeMapping.getSizeNetwork();
+			final int n = attributeMapping.size();
 			return n == 0 ? 0 : n + 2;
 		}
 
 		// @Override
 		public int getRowCount() {
 			int n = attributeMapping.getSizeMergedAttributes() + 1; // +1: add an empty row in the end
-			return attributeMapping.getSizeNetwork() == 0 ? 0 : n;
+			return attributeMapping.size() == 0 ? 0 : n;
 		}
 
 		@Override

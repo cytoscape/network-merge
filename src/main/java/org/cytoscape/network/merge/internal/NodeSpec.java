@@ -37,4 +37,9 @@ public class NodeSpec implements Comparable<NodeSpec>
 			return (getNode().getSUID() > other.getNode().getSUID()) ? 1 : -1;
 		return 0;
 	}
+
+	public void addToMatchList(CyNetwork net2, CyNode node2) {
+		// TODO Auto-generated method stub
+		
+	}
 }

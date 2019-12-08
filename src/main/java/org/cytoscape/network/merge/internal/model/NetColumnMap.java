@@ -1,5 +1,7 @@
 package org.cytoscape.network.merge.internal.model;
 
+import java.util.HashMap;
+
 /*
  * #%L
  * Cytoscape Merge Impl (network-merge-impl)
@@ -27,7 +29,6 @@ package org.cytoscape.network.merge.internal.model;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
@@ -40,10 +41,10 @@ import org.cytoscape.model.CyTable;
  * 
  */
 public class NetColumnMap  {		//implements MatchingAttribute
-    private Map<CyNetwork,CyColumn> attributeForMatching; // network to attribute name
+    private Map<CyNetwork,CyColumn> map; // network to attribute name
     
     public NetColumnMap() {
-        attributeForMatching = new WeakHashMap<CyNetwork,CyColumn>();
+        map = new HashMap<CyNetwork,CyColumn>();
     }
 
 //    public void dump(String s)
@@ -56,42 +57,41 @@ public class NetColumnMap  {		//implements MatchingAttribute
 //    }
     
     
-    public Map<CyNetwork,CyColumn> getNetColumnMap() {        return attributeForMatching;    }
+    public Map<CyNetwork,CyColumn> getNetColumnMap() {        return map;    }
     
-    public CyColumn getColumn(final CyNetwork net) {
-        if (net == null) 
-            throw new java.lang.NullPointerException("getAttributeForMatching: net == null");
-          return attributeForMatching.get(net);
+    public CyColumn get(final CyNetwork net) {
+        if (net == null)  	 throw new java.lang.NullPointerException("getAttributeForMatching: net == null");
+        return map.get(net);
     }
     
-    public void putAttributeForMatching(final CyNetwork net, final CyColumn col) {
+    public void put(final CyNetwork net, final CyColumn col) {
         if (net==null)      throw new java.lang.NullPointerException("putAttributeForMatching: net == null");
         if (col==null)     throw new java.lang.NullPointerException("putAttributeForMatching: col == null");
 
-        attributeForMatching.put(net, col);
+        map.put(net, col);
     }
 
-    public void addNetwork(final CyNetwork net) {
-        if (net == null) 
-            throw new java.lang.NullPointerException("addNetwork: net == null");
-        
-        //putAttributeForMatching(net,net.getDefaultNodeTable().getPrimaryKey());
-        CyTable table = net.getDefaultNodeTable();
-        CyColumn col = table.getColumn("name");
-        putAttributeForMatching(net,col);
-    }
+//    public void addNetwork(final CyNetwork net) {
+//        if (net == null) 
+//            throw new java.lang.NullPointerException("addNetwork: net == null");
+//        
+//        //putAttributeForMatching(net,net.getDefaultNodeTable().getPrimaryKey());
+//        CyTable table = net.getDefaultNodeTable();
+//        CyColumn col = table.getColumn("name");
+//        putAttributeForMatching(net,col);
+//    }
             
-    public CyColumn removeNetwork(final CyNetwork net) {
-        if (net == null)         throw new java.lang.NullPointerException("removeNetwork: net == null");
-        return attributeForMatching.remove(net);
-    }
-    
-    public int getSizeNetwork() 			{       return attributeForMatching.size();    }
-    public Set<CyNetwork> getNetworkSet() 	{       return attributeForMatching.keySet();    }
-    public void clear() 					{       attributeForMatching.clear();    }
+//    public CyColumn removeNetwork(final CyNetwork net) {
+//        if (net == null)         throw new java.lang.NullPointerException("removeNetwork: net == null");
+//        return attributeForMatching.remove(net);
+//    }
+//    
+    public int size() 			{       return map.size();    }
+    public Set<CyNetwork> getNetworkSet() 	{       return map.keySet();    }
+    public void clear() 					{       map.clear();    }
 
 	public boolean contains(CyNetwork net, String attribute) {
-		CyColumn col = attributeForMatching.get(net);
+		CyColumn col = map.get(net);
 		return col != null && (col.getName().contentEquals(attribute));
 	}
 }

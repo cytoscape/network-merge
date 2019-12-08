@@ -70,7 +70,7 @@ class MatchNodeTable extends JTable {
                     colNames.add(colName);
             }
             
-            CyColumn cyCol = matchingAttribute.getColumn(net);
+            CyColumn cyCol = matchingAttribute.get(net);
             JComboBox<String> comboBox = new JComboBox<String>(colNames);
             
             if (cyCol!=null) {
@@ -97,12 +97,12 @@ class MatchNodeTable extends JTable {
 
         @Override
         public int getColumnCount() {
-            return matchingAttribute.getSizeNetwork();
+            return matchingAttribute.size();
         }
 
         @Override
         public int getRowCount() {
-            int n = matchingAttribute.getSizeNetwork();
+            int n = matchingAttribute.size();
 			return n == 0 ? 0 : 1;
         }
 
@@ -113,7 +113,7 @@ class MatchNodeTable extends JTable {
 
         @Override
         public Object getValueAt(int row, int col) {
-            return matchingAttribute.getColumn(networks.get(col)).getName();
+            return matchingAttribute.get(networks.get(col)).getName();
         }
 
         @Override
@@ -133,7 +133,7 @@ class MatchNodeTable extends JTable {
                 CyTable table = net.getDefaultNodeTable();
                 CyColumn cyCol = table.getColumn((String)value);
                 if (cyCol!=null) {
-                    matchingAttribute.putAttributeForMatching(net, cyCol);
+                    matchingAttribute.put(net, cyCol);
                     fireTableDataChanged();
                 }
             }
