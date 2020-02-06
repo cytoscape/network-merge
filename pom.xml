@@ -1,10 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.cytoscape</groupId>
 	<artifactId>merge</artifactId>
-	<version>3.5.2</version>
+	<version>3.6.0</version>
 	<packaging>bundle</packaging>
 	<name>Merge</name>
 
@@ -12,14 +12,15 @@
 		<bundle.symbolicName>org.cytoscape.merge</bundle.symbolicName>
 		<bundle.namespace>org.cytoscape.network.merge.internal</bundle.namespace>
 
-		<cytoscape.api.version>3.7.0</cytoscape.api.version>
-		<osgi.api.version>4.2.0</osgi.api.version>
+		<cytoscape.api.version>3.8.0</cytoscape.api.version>
+		<osgi.api.version>6.0.0</osgi.api.version>
 
 		<!-- Maven Plugin Settings -->
 		<junit.version>4.12</junit.version>
-		<maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
-		<maven-bundle-plugin.version>2.5.4</maven-bundle-plugin.version>
-	</properties>
+		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+		<maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
+		<maven-bundle-plugin.version>4.1.0</maven-bundle-plugin.version>
+		</properties>
 
 	<scm>
 		<connection>scm:git:git://github.com/cytoscape/network-merge.git</connection>
@@ -29,29 +30,18 @@
 
 	<distributionManagement>
 		<repository>
-			<id>releases</id>
-			<name>Internal Releases</name>
-			<url>http://code.cytoscape.org/nexus/content/repositories/releases</url>
+			<id>cytoscape_releases</id>
+			<name>Cytoscape Releases</name>
+			<url>http://nrnb-nexus.ucsd.edu/repository/cytoscape_releases/</url>
 		</repository>
 		<snapshotRepository>
-			<id>snapshots</id>
-			<name>Internal Snapshots</name>
-			<url>http://code.cytoscape.org/nexus/content/repositories/snapshots</url>
+			<id>cytoscape_snapshots</id>
+			<name>Cytoscape Snapshots</name>
+			<url>http://nrnb-nexus.ucsd.edu/repository/cytoscape_snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
 	<repositories>
-		<repository>
-			<id>cytoscape_snapshots</id>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<name>Cytoscape Snapshots</name>
-			<url>http://code.cytoscape.org/nexus/content/repositories/snapshots/</url>
-		</repository>
 		<repository>
 			<id>cytoscape_releases</id>
 			<snapshots>
@@ -61,7 +51,18 @@
 				<enabled>true</enabled>
 			</releases>
 			<name>Cytoscape Releases</name>
-			<url>http://code.cytoscape.org/nexus/content/repositories/releases/</url>
+			<url>http://nrnb-nexus.ucsd.edu/repository/cytoscape_releases/</url>
+		</repository>
+		<repository>
+			<id>cytoscape_snapshots</id>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<name>Cytoscape Snapshots</name>
+			<url>http://nrnb-nexus.ucsd.edu/repository/cytoscape_snapshots/</url>
 		</repository>
 		<repository>
 			<id>cytoscape_thirdparty</id>
@@ -72,7 +73,7 @@
 				<enabled>true</enabled>
 			</releases>
 			<name>Cytoscape Third Party</name>
-			<url>http://code.cytoscape.org/nexus/content/repositories/thirdparty/</url>
+			<url>http://nrnb-nexus.ucsd.edu/repository/cytoscape_thirdparty/</url>
 		</repository>
 	</repositories>
 
@@ -84,8 +85,8 @@
 				<version>${maven-compiler-plugin.version}</version>
 				<extensions>true</extensions>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>11</source>
+					<target>11</target>
 					<encoding>UTF-8</encoding>
 					<optimize>true</optimize>
 					<showWarnings>true</showWarnings>
@@ -111,6 +112,11 @@
 					</instructions>
 				</configuration>
 			</plugin>
+			<plugin>
+          		<groupId>org.apache.maven.plugins</groupId>
+          		<artifactId>maven-surefire-plugin</artifactId>
+          		<version>${maven-surefire-plugin.version}</version>
+        	</plugin>
 		</plugins>
 	</build>
 
@@ -129,9 +135,9 @@
 			<version>${osgi.api.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<!-- Cytoscape API dependencies -->
-		
+
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>model-api</artifactId>
@@ -144,7 +150,7 @@
 			<version>${cytoscape.api.version}</version>
 			<scope>provided</scope>
 		</dependency>
-			<dependency>
+		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>swing-application-api</artifactId>
 			<version>${cytoscape.api.version}</version>
@@ -155,22 +161,22 @@
 			<artifactId>swing-util-api</artifactId>
 			<version>${cytoscape.api.version}</version>
 			<scope>provided</scope>
-		</dependency>		
-		
+		</dependency>
+
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>command-executor-api</artifactId>
 			<version>${cytoscape.api.version}</version>
 			<scope>provided</scope>
-		</dependency>	
-			
+		</dependency>
+
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>io-api</artifactId>
 			<version>${cytoscape.api.version}</version>
-			<scope>provided</scope>	
-		</dependency>	
-		
+			<scope>provided</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
