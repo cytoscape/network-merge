@@ -47,14 +47,14 @@ public class NetColumnMap  {		//implements MatchingAttribute
         map = new HashMap<CyNetwork,CyColumn>();
     }
 
-//    public void dump(String s)
-//    {
-//		System.out.print(s + "NetColumnMap -> ");
-//    	for (CyNetwork net: attributeForMatching.keySet())
-//    		System.out.print(net.getSUID() + ": " + attributeForMatching.get(net) + ", ");
-//		System.out.println();
-//
-//    }
+    public void dump(String s)
+    {
+		System.out.print(s + "NetColumnMap -> ");
+    	for (CyNetwork net: map.keySet())
+    		System.out.print(net.getSUID() + ": " + map.get(net) + ", ");
+		System.out.println();
+
+    }
     
     
     public Map<CyNetwork,CyColumn> getNetColumnMap() {        return map;    }
@@ -65,26 +65,26 @@ public class NetColumnMap  {		//implements MatchingAttribute
     }
     
     public void put(final CyNetwork net, final CyColumn col) {
-        if (net==null)      throw new java.lang.NullPointerException("putAttributeForMatching: net == null");
-        if (col==null)     throw new java.lang.NullPointerException("putAttributeForMatching: col == null");
+        if (net==null)      throw new java.lang.NullPointerException("map: net == null");
+        if (col==null)     throw new java.lang.NullPointerException("map: col == null");
 
         map.put(net, col);
     }
 
-//    public void addNetwork(final CyNetwork net) {
-//        if (net == null) 
-//            throw new java.lang.NullPointerException("addNetwork: net == null");
-//        
-//        //putAttributeForMatching(net,net.getDefaultNodeTable().getPrimaryKey());
-//        CyTable table = net.getDefaultNodeTable();
-//        CyColumn col = table.getColumn("name");
-//        putAttributeForMatching(net,col);
-//    }
+    public void addNetwork(final CyNetwork net) {
+        if (net == null) 
+            throw new java.lang.NullPointerException("addNetwork: net == null");
+        
+        //putAttributeForMatching(net,net.getDefaultNodeTable().getPrimaryKey());
+        CyTable table = net.getDefaultNodeTable();
+        CyColumn col = table.getColumn("name");
+        map.put(net, col);
+}
             
-//    public CyColumn removeNetwork(final CyNetwork net) {
-//        if (net == null)         throw new java.lang.NullPointerException("removeNetwork: net == null");
-//        return attributeForMatching.remove(net);
-//    }
+    public CyColumn removeNetwork(final CyNetwork net) {
+        if (net == null)         throw new java.lang.NullPointerException("removeNetwork: net == null");
+        return map.remove(net);
+    }
 //    
     public int size() 			{       return map.size();    }
     public Set<CyNetwork> getNetworkSet() 	{       return map.keySet();    }

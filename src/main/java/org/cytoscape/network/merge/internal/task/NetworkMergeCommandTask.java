@@ -17,9 +17,9 @@ import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.Merge;
 import org.cytoscape.network.merge.internal.NetworkMerge;
-import org.cytoscape.network.merge.internal.NodeSpec;
 import org.cytoscape.network.merge.internal.model.AttributeMap;
 import org.cytoscape.network.merge.internal.model.NetColumnMap;
+import org.cytoscape.network.merge.internal.model.NodeSpec;
 import org.cytoscape.network.merge.internal.util.ColumnType;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CyNetworkNaming;
@@ -39,19 +39,7 @@ import org.cytoscape.work.json.JSONResult;
 public class NetworkMergeCommandTask extends AbstractTask implements ObservableTask {
 
 	@ContainsTunables
-//	@Tunable(description="Network", context="nogui", longDescription="The name of the resultant network", exampleStringValue=StringToModel.CY_NETWORK_EXAMPLE_STRING)
-//	public CyNetwork network;
 
-//	@Tunable (description="Namespace for table", context="nogui", longDescription="A syntactic prefix used to differentiate the table from others that may contain the same columns.")
-//	public String namespace = "a OR b";
-
-//	  @Tunable(
-//				description = "NetworkList", context= Tunable.NOGUI_CONTEXT,
-//				longDescription="The list of networks to merge", 
-//				exampleStringValue = "net1, net2"
-//		)
-//	String networks = "<this and that>";
-//
 	  @Tunable(
 				description = "Type of Merge", context= Tunable.NOGUI_CONTEXT,
 				longDescription="Whether the networks are merged by union, intersection or difference", 
@@ -406,7 +394,6 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 	public static String edgeName(CyNetwork net, CyEdge edge)
 	{
 		return getNodeName(net,edge.getSource()) + " -> " + getNodeName(net,edge.getTarget());
-		
 	}
 	
 	public static String getEdgeSet(CyNetwork netw, Set<CyEdge> edgeSet) {

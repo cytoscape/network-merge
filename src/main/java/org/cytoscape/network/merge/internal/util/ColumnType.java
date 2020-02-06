@@ -139,20 +139,28 @@ public enum ColumnType {
 	}
 
 	public static ColumnType getReasonableCompatibleConversionType(Set<ColumnType> types) {
-		Iterator<ColumnType> it = types.iterator();
-		ColumnType curr = it.next();
-		boolean li = curr.isList;
-		ColumnType ret = curr.toPlain();
-		while (it.hasNext()) {
-			curr = it.next();
-			ColumnType plain = curr.toPlain();
-			if (!isConvertable(plain, ret)) 
-				ret = isConvertable(ret, plain) ? plain : STRING;
-			if (!li) 
-				li = curr.isList;
-		}
-
-		return li ? ret.toList() : ret;
+		
+		return ColumnType.STRING;
+//		for (ColumnType type : types)
+//		{
+//			boolean li = type.isList;
+//			ColumnType ret = type.toPlain();
+//
+//		}
+//		Iterator<ColumnType> it = types.iterator();
+//		ColumnType curr = it.next();
+//		boolean li = curr.isList;
+//		ColumnType ret = curr.toPlain();
+//		while (it.hasNext()) {
+//			curr = it.next();
+//			ColumnType plain = curr.toPlain();
+//			if (!isConvertable(plain, ret)) 
+//				ret = isConvertable(ret, plain) ? plain : STRING;
+//			if (!li) 
+//				li = curr.isList;
+//		}
+//
+//		return li ? ret.toList() : ret;
 	}
 
 	public static Set<ColumnType> getConvertibleTypes(ColumnType fromType) {

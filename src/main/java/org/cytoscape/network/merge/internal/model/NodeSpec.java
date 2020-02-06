@@ -1,4 +1,4 @@
-package org.cytoscape.network.merge.internal;
+package org.cytoscape.network.merge.internal.model;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;

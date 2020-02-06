@@ -882,25 +882,18 @@ public class NetworkMergeDialog extends JDialog {
 	private void addRemoveAttributeMapping(CyNetwork network, boolean isAdd) {
 
 		if (isAdd) {
-//			nodeAttrMapping.addNetwork(network, network.getDefaultNodeTable()); // TODO:
-																						// make
-																						// the
-																						// table
-																						// an
-																						// user
-																						// option?
-//			edgeAttrMapping.addNetwork(network, network.getDefaultEdgeTable());
-//			matchingAttr.addNetwork(network);
+			nodeAttrMapping.addNetwork(network, network.getDefaultNodeTable()); // TODO:
+			edgeAttrMapping.addNetwork(network, network.getDefaultEdgeTable());
+			matchingAttr.addNetwork(network);
 		} else {
-//			nodeAttrMapping.removeNetwork(network);
-//			edgeAttrMapping.removeNetwork(network);
-//			matchingAttr.removeNetwork(network);
+			nodeAttrMapping.removeNetwork(network);
+			edgeAttrMapping.removeNetwork(network);
+			matchingAttr.removeNetwork(network);
 		}
 	}
 
 	private void updateOKButton() {
-		int n = !getAdvancedOptionsPnl().isCollapsed() && getInNetMergeCkb().isSelected()
-				&& getOperation() == Operation.UNION ? 1 : 2;
+		int n = (getInNetMergeCkb().isSelected() && getOperation() == Operation.UNION) ? 1 : 2;
 
 		if (selectedNetData.getSize() < n) {
 			getOkBtn().setToolTipText("Select at least " + n + " networks to merge");

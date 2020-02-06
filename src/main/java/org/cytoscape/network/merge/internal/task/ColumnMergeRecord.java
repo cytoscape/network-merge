@@ -5,7 +5,9 @@ import java.util.List;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.network.merge.internal.util.ColumnType;
-
+/*
+ * ColumnMergeRecord - a list of 
+ */
 //---------------------------------------------------------------------
 public class ColumnMergeRecord 
 {

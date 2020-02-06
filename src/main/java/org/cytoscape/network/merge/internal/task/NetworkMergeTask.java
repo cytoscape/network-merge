@@ -118,12 +118,10 @@ static boolean verbose = Merge.verbose;
 		CyNetwork newNetwork = cnf.createNetwork();
 		newNetwork.getRow(newNetwork).set(CyNetwork.NAME, networkName);
 
-		// Register merged network
-		networkManager.addNetwork(newNetwork);
 		
 		taskMonitor.setStatusMessage("Merging networks...");
-		final NodeMerger nodeMerger = new NodeMerger(conflictCollector);
-		final EdgeMerger edgeMerger = new EdgeMerger(conflictCollector);
+		final NodeMerger nodeMerger = new NodeMerger(conflictCollector, nodeAttributeMapping);
+		final EdgeMerger edgeMerger = new EdgeMerger(newNetwork, nodeMerger, conflictCollector, edgeAttributeMapping);
 		final AttributeValueMatcher attributeValueMatcher = new DefaultAttributeValueMatcher();
 
 		networkMerge = new Merge(
@@ -159,6 +157,8 @@ static boolean verbose = Merge.verbose;
 			this.networkMerge = null;
 			return;
 		}
+		// Register merged network
+		networkManager.addNetwork(newNetwork);
 
 		// Create view
 		taskMonitor.setStatusMessage("Creating view...");

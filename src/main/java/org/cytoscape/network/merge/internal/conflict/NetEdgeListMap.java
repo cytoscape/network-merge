@@ -1,4 +1,4 @@
-package org.cytoscape.network.merge.internal;
+package org.cytoscape.network.merge.internal.conflict;
 
 import java.util.HashMap;
 import java.util.List;
