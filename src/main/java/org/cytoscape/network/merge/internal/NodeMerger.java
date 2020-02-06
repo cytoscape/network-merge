@@ -53,7 +53,7 @@ public class NodeMerger {
 	public NodeMerger(final AttributeConflictCollector conflictCollector, AttributeMap nodeAttributeMapping) {
 		this.conflictCollector = conflictCollector;
 	}
-	boolean verbose = true;
+	boolean verbose = false;
 
 	public void mergeNodes(List<CyNetwork> sources, CyNetwork targetNetwork, Operation operation, AttributeMap nodeAttribute, 
 			NetColumnMap matchingAttribute, AttributeValueMatcher attributeValueMatcher, CyColumn matchColumn, CyColumn countColumn) 
@@ -91,7 +91,7 @@ public class NodeMerger {
 					matchList.remove(nodes);
 			}
 		
-		if (operation == Operation.UNION || operation != Operation.INTERSECTION)		// for Union OR Intersection, add the matches to our target
+		if (operation == Operation.UNION || operation == Operation.INTERSECTION)		// for Union OR Intersection, add the matches to our target
 		{
 			for (List<NodeSpec> nodes : matchList)
 				addNodeListToTarget(nodes);
@@ -278,21 +278,28 @@ public class NodeMerger {
 		if (targetRow == null) throw new NullPointerException("targetRow");
 		if (fromCyRow == null) throw new NullPointerException("fromCyRow");
 		
-		if (targColType == ColumnType.STRING) {
+		if (fromColType == ColumnType.STRING) {
 			Class c = fromColType.getType().getClass();
 			String s = fromColumn.getName();
-			final String fromValue = fromCyRow.get(s, String.class);
-			final String o2 = targetRow.get(targetColumn.getName(), String.class);
-			
-//			System.out.println("mergeAttribute: " + fromValue + " - " + o2);
-			if (o2 == null || o2.length() == 0)  // null or empty attribute
+			try
 			{
-				targetRow.set(targetColumn.getName(), fromValue);							// <-------
-				if (countColumn != null) targetRow.set(countColumn.getName(), 1);							// <-------
+				final String fromValue = fromCyRow.get(s, String.class);
+				final String o2 = targetRow.get(targetColumn.getName(), String.class);
+				
+//				System.out.println("mergeAttribute: " + fromValue + " - " + o2);
+				if (o2 == null || o2.length() == 0)  // null or empty attribute
+				{
+					targetRow.set(targetColumn.getName(), fromValue);							// <-------
+					if (countColumn != null) targetRow.set(countColumn.getName(), 1);							// <-------
+				}
+				else if (fromValue != null && fromValue.equals(o2)) { } // the same, do nothing
+				else  if (conflictCollector != null)
+						conflictCollector.addConflict(from, fromColumn, target, targetColumn);
 			}
-			else if (fromValue != null && fromValue.equals(o2)) { } // the same, do nothing
-			else  if (conflictCollector != null)
-					conflictCollector.addConflict(from, fromColumn, target, targetColumn);
+			catch (IllegalArgumentException ex)
+			{
+				
+			}
 		} else if (!targColType.isList()) 
 		{ // simple type (Integer, Long, Double, Boolean)
 			Object o1 = fromCyRow.get(fromColumn.getName(), fromColType.getType());

@@ -51,10 +51,10 @@ boolean verbose = false;
 		// create matchedEdges and unmatchedEdges lists
 		for (CyNetwork net : networks)
 		{
-			System.out.println("adding edges from " + NetworkMergeCommandTask.getNetworkName(net));
+			if (verbose) System.out.println("adding edges from " + NetworkMergeCommandTask.getNetworkName(net));
 			for (CyEdge edge : net.getEdgeList())
 				processEdge(new EdgeSpec(net,edge));
-			System.out.println(matchedEdges.size() + " / " + unmatchedEdges.size());
+			if (verbose) System.out.println(matchedEdges.size() + " / " + unmatchedEdges.size());
 		}
 		
 		// dump
@@ -100,7 +100,7 @@ boolean verbose = false;
 			{
 				if (edges == null || edges.isEmpty()) return;
 				EdgeSpec edge = edges.get(0);
-				CyNode  targSrc = nodeMerger.targetLookup(edge.getSource());
+				CyNode targSrc = nodeMerger.targetLookup(edge.getSource());
 				CyNode targTarg = nodeMerger.targetLookup(edge.getTarget());
 				
 				CyEdge newEdge = targetNetwork.addEdge(targSrc, targTarg, edge.isDirected());
@@ -144,7 +144,7 @@ boolean verbose = false;
 				matches.add(unmatched);
 				matchedEdges.add(matches);
 				unmatchedEdges.remove(i);
-				System.out.println("adding edge match");
+				if (verbose) System.out.println("adding edge match");
 				return;
 			}
 		}
@@ -177,8 +177,8 @@ boolean verbose = false;
 		
 		CyNode  targSrc = nodeMerger.targetLookup(edge.getSource());
 		CyNode targTarg = nodeMerger.targetLookup(edge.getTarget());
-		if (targSrc == null)  {  System.err.println("targSrc == null");    return; 	};
-		if (targTarg == null)  {  System.err.println("targTarg == null");   return; 	};
+		if (targSrc == null)  { if (verbose)  System.err.println("targSrc == null");    return; 	};
+		if (targTarg == null)  { if (verbose)  System.err.println("targTarg == null");   return; 	};
 		
 		CyEdge newEdge = targetNetwork.addEdge(targSrc, targTarg, edge.isDirected());
 		List<EdgeSpec> list = new ArrayList<EdgeSpec>();
