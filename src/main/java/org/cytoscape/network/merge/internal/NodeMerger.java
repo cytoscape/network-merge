@@ -53,7 +53,7 @@ public class NodeMerger {
 	public NodeMerger(final AttributeConflictCollector conflictCollector, AttributeMap nodeAttributeMapping) {
 		this.conflictCollector = conflictCollector;
 	}
-	boolean verbose = false;
+	boolean verbose = true;
 
 	public void mergeNodes(List<CyNetwork> sources, CyNetwork targetNetwork, Operation operation, AttributeMap nodeAttribute, 
 			NetColumnMap matchingAttribute, AttributeValueMatcher attributeValueMatcher, CyColumn matchColumn, CyColumn countColumn) 
@@ -82,7 +82,7 @@ public class NodeMerger {
 //		}
 		
 		if (verbose) System.out.println("D:  merge nodes in the matchedList ---------------------------" );
-		// if not all nets have a node in the match, remove from intersection
+		// if not ALL nets have a node in the match, remove from intersection
 		if (operation == Operation.INTERSECTION)
 			for (int i = matchList.size()-1; i>=0; i--)
 			{
@@ -289,8 +289,8 @@ public class NodeMerger {
 //				System.out.println("mergeAttribute: " + fromValue + " - " + o2);
 				if (o2 == null || o2.length() == 0)  // null or empty attribute
 				{
-					targetRow.set(targetColumn.getName(), fromValue);							// <-------
-					if (countColumn != null) targetRow.set(countColumn.getName(), 1);							// <-------
+					targetRow.set(targetColumn.getName(), fromValue);						
+					if (countColumn != null) targetRow.set(countColumn.getName(), 1);	
 				}
 				else if (fromValue != null && fromValue.equals(o2)) { } // the same, do nothing
 				else  if (conflictCollector != null)
@@ -298,7 +298,7 @@ public class NodeMerger {
 			}
 			catch (IllegalArgumentException ex)
 			{
-				
+				if (verbose) System.out.println("IllegalArgumentException");
 			}
 		} else if (!targColType.isList()) 
 		{ // simple type (Integer, Long, Double, Boolean)
@@ -309,7 +309,7 @@ public class NodeMerger {
 			Object o2 = targetRow.get(targetColumn.getName(), targColType.getType());
 			if (o2 == null) 
 			{
-				targetRow.set(targetColumn.getName(), o1);					// <-------
+				targetRow.set(targetColumn.getName(), o1);		
 				if (countColumn != null) targetRow.set(countColumn.getName(), 2);			
 			}
 			else if (o1.equals(o2)) {}
