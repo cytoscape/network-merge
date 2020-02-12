@@ -99,12 +99,7 @@ boolean verbose = false;
 			for (List<EdgeSpec> edges: matchedEdges)
 			{
 				if (edges == null || edges.isEmpty()) return;
-				EdgeSpec edge = edges.get(0);
-				CyNode targSrc = nodeMerger.targetLookup(edge.getSource());
-				CyNode targTarg = nodeMerger.targetLookup(edge.getTarget());
-				
-				CyEdge newEdge = targetNetwork.addEdge(targSrc, targTarg, edge.isDirected());
-				mergeEdge(edges, newEdge, targetNetwork);
+				mergeEdge(edges, edges.get(0), targetNetwork);
 			}
 			
 			// for union operation, we want unmatched edges too
@@ -183,14 +178,18 @@ boolean verbose = false;
 		CyEdge newEdge = targetNetwork.addEdge(targSrc, targTarg, edge.isDirected());
 		List<EdgeSpec> list = new ArrayList<EdgeSpec>();
 		list.add(edge);
-		mergeEdge(list, newEdge, targetNetwork);
+		mergeEdge(list, new EdgeSpec(targetNetwork, newEdge), targetNetwork);
 		if (verbose) 
 			System.out.println(edgeName(edge));
 	}
 
 	//----------------------------------------------------------------
-	private void mergeEdge(final List<EdgeSpec> edges, CyEdge newEdge, CyNetwork newNetwork) 
+	private void mergeEdge(final List<EdgeSpec> edges, EdgeSpec edge, CyNetwork newNetwork) 
 	{
+		CyNode targSrc = nodeMerger.targetLookup(edge.getSource());
+		CyNode targTarg = nodeMerger.targetLookup(edge.getTarget());
+		if (targSrc == null || targTarg == null) return;
+		CyEdge newEdge = targetNetwork.addEdge(targSrc, targTarg, edge.isDirected());
 		if (edges == null || edges.isEmpty() || newEdge == null) 		throw new IllegalArgumentException();
 
 		final int nattr = edgeAttributeMapping.getSizeMergedAttributes();
@@ -198,7 +197,7 @@ boolean verbose = false;
 
 		for (int i = 0; i < nattr; i++) {
 			String str = edgeAttributeMapping.getMergedAttribute(i);
-			System.out.println("Matching " + str);
+			if (verbose) System.out.println("Matching " + str);
 			CyColumn attr_merged = t.getColumn(str);
 			if (attr_merged == null) continue;
 				// merge
@@ -229,7 +228,7 @@ boolean verbose = false;
 		final CyRow cyRow = network.getRow(targetEdge);
 		final ColumnType colType = ColumnType.getType(targetColumn);
 
-		System.out.println("Merging " + targetColumn.getName());
+	if (verbose)	System.out.println("Merging " + targetColumn.getName() + " " + colType);
 
 		
 		for (EdgeSpec from : edgeColumnMap.keySet()) {
@@ -251,6 +250,7 @@ boolean verbose = false;
 				}
 				catch (Exception e)
 				{
+					System.err.println(fromColumn.getName() + e.getMessage());
 					e.printStackTrace();
 				}
 				if (o2 == null || o2.length() == 0) { // null or empty attribute

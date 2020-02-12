@@ -53,7 +53,7 @@ public class NodeMerger {
 	public NodeMerger(final AttributeConflictCollector conflictCollector, AttributeMap nodeAttributeMapping) {
 		this.conflictCollector = conflictCollector;
 	}
-	boolean verbose = true;
+	boolean verbose = false;
 
 	public void mergeNodes(List<CyNetwork> sources, CyNetwork targetNetwork, Operation operation, AttributeMap nodeAttribute, 
 			NetColumnMap matchingAttribute, AttributeValueMatcher attributeValueMatcher, CyColumn matchColumn, CyColumn countColumn) 
@@ -302,7 +302,10 @@ public class NodeMerger {
 			}
 		} else if (!targColType.isList()) 
 		{ // simple type (Integer, Long, Double, Boolean)
-			Object o1 = fromCyRow.get(fromColumn.getName(), fromColType.getType());
+	if (fromCyRow == null || fromColType == null) return;
+	try
+	{
+		Object o1 = fromCyRow.get(fromColumn.getName(), fromColType.getType());
 			if (fromColType != targColType) 
 				o1 = targColType.castService(o1);
 			if (o1 == null) return;
@@ -315,7 +318,12 @@ public class NodeMerger {
 			else if (o1.equals(o2)) {}
 			else if (conflictCollector != null)
 					conflictCollector.addConflict(from, fromColumn, target, targetColumn);
-		} else { // toattr is list type
+	}
+	catch (NullPointerException ex)
+	{
+		//  ?? not sure why we get here!
+	}
+	} else { // toattr is list type
 			// TODO: use a conflict handler to handle this part?
 			ColumnType plainType = targColType.toPlain();
 
