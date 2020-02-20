@@ -1,40 +1,9 @@
 package org.cytoscape.network.merge.internal;
 
-import java.util.ArrayList;
-
-/*
- * #%L
- * Cytoscape Merge Impl (network-merge-impl)
- * $Id:$
- * $HeadURL:$
- * %%
- * Copyright (C) 2006 - 2013 The Cytoscape Consortium
- * %%
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as 
- * published by the Free Software Foundation, either version 2.1 of the 
- * License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Lesser Public License for more details.
- * 
- * You should have received a copy of the GNU General Lesser Public 
- * License along with this program.  If not, see
- * <http://www.gnu.org/licenses/lgpl-2.1.html>.
- * #L%
- */
-
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.cytoscape.model.CyColumn;
-import org.cytoscape.model.CyEdge;
-import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
@@ -42,9 +11,9 @@ import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.NetworkMerge.Operation;
 import org.cytoscape.network.merge.internal.model.AttributeMap;
 import org.cytoscape.network.merge.internal.model.NetColumnMap;
-import org.cytoscape.network.merge.internal.task.NetworkMergeCommandTask;
 import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
 import org.cytoscape.network.merge.internal.util.ColumnType;
+import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.TaskMonitor;
 
 /**
@@ -129,7 +98,7 @@ public class Merge  {
 	 *  
 	 *  	F:	Merge Edges
 	 *  		build list from each network,
-	 *  			if edge source and target have equi
+	 *  			if edge source and target have equivalents, copy edge
 	 */
 	//----------------------------------------------------------------
 	static String MATCH = "Matching.Attribute";
@@ -173,6 +142,10 @@ public class Merge  {
 			}
 		
 			if (verbose) System.err.println("H return mergedNetwork ---------------------------------------" );
+			
+			// #12658
+			CyNetwork firstSource = networks.get(0);
+			
 			return mergedNetwork;
 		}
 	public void interrupt()	{		interrupted = true;	}
@@ -232,7 +205,7 @@ public class Merge  {
 	}
 //===============================================================================================
 
-	//===============================================================================================
+//===============================================================================================
 	public void setWithinNetworkMerge(boolean within) {		withinNetworkMerge = within;	}
 	
 
@@ -250,6 +223,7 @@ public class Merge  {
 		System.out.println("}");
 	}
 	
+	//===============================================================================================
 	private void dumpNodeColumnMap(Map<CyNode, CyColumn> map)
 	{
 		for (CyNode id : map.keySet())

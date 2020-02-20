@@ -80,6 +80,8 @@ import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
 import org.cytoscape.util.swing.BasicCollapsiblePanel;
 import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.util.swing.LookAndFeelUtil;
+import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 
@@ -92,6 +94,8 @@ public class NetworkMergeDialog extends JDialog {
 	
 	private final CyNetworkManager cnm;
 	private final CyNetworkFactory cnf;
+	private final CyNetworkViewManager netViewMgr;
+	private final VisualMappingManager vizMapMgr;
 	private final CyNetworkNaming cnn;
 	private final TaskManager<?, ?> taskManager;
 	private final IconManager iconMgr;
@@ -139,6 +143,7 @@ public class NetworkMergeDialog extends JDialog {
 	
 	/** Creates new form NetworkMergeDialog */
 	public NetworkMergeDialog(final CyNetworkManager cnm,
+							final CyNetworkViewManager nvMgr, final VisualMappingManager vmm,
 							  final CyNetworkFactory cnf,
 							  final CyNetworkNaming cnn,
 							  final TaskManager<?, ?> taskManager,
@@ -146,6 +151,8 @@ public class NetworkMergeDialog extends JDialog {
 							  final CreateNetworkViewTaskFactory netViewCreator) {
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
+		vizMapMgr = vmm;
+		netViewMgr = nvMgr;
 		this.cnm = cnm;
 		this.cnf = cnf;
 		this.cnn = cnn;
@@ -828,10 +835,10 @@ public class NetworkMergeDialog extends JDialog {
 //					((AttributeMappingImpl) nodeAttrMapping).dump("create NetworkMergeTask");
 //					System.out.println("\n");
 //					((NetColumnMap) matchingAttr).dump("create NetworkMergeTask");
-					final NetworkMergeTask nmTask = new NetworkMergeTask(cnf, cnm, netName, matchingAttr,
+					final NetworkMergeTask nmTask = new NetworkMergeTask(cnf, cnm, netViewMgr, netName, matchingAttr,
 							nodeAttrMapping, edgeAttrMapping, selectedNetData.getNetworkList(),
 							getOperation(), getDifference1Btn().isSelected(), conflictCollector, //tgtType,   //, selectedNetAttrIDType
-							getInNetMergeCkb().isSelected(), false, netViewCreator);
+							getInNetMergeCkb().isSelected(), false, netViewCreator, vizMapMgr);
 
 					final TaskIterator ti = new TaskIterator(nmTask);
 
@@ -905,7 +912,7 @@ public class NetworkMergeDialog extends JDialog {
 	}
 
 	private void updateUpDownButtons() {
-		boolean diff = selectedOperation == Operation.DIFFERENCE;
+		boolean diff = true;  // selectedOperation == Operation.DIFFERENCE;   #12658
 		int imin = getSelectedNetLs().getMinSelectionIndex();
 		int imax = getSelectedNetLs().getMaxSelectionIndex();
 		getMoveUpBtn().setEnabled(diff && 0 < imin && imax <= selectedNetData.getSize() - 1);

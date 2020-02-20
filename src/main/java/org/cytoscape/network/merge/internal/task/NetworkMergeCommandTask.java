@@ -3,7 +3,6 @@ package org.cytoscape.network.merge.internal.task;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -20,10 +19,11 @@ import org.cytoscape.network.merge.internal.NetworkMerge;
 import org.cytoscape.network.merge.internal.model.AttributeMap;
 import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.model.NodeSpec;
-import org.cytoscape.network.merge.internal.util.ColumnType;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
+import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.ContainsTunables;
 import org.cytoscape.work.FinishStatus;
@@ -134,6 +134,8 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		CyNetworkFactory cyNetworkFactory = registrar.getService(CyNetworkFactory.class);
 		CreateNetworkViewTaskFactory netViewCreator = registrar.getService(CreateNetworkViewTaskFactory.class);
 		CyNetworkManager cnm = registrar.getService(CyNetworkManager.class);
+		CyNetworkViewManager nvm = registrar.getService(CyNetworkViewManager.class);
+		VisualMappingManager vmm = registrar.getService(VisualMappingManager.class);
 
 		if (verbose) System.err.println("A: build network list ---------------- " );
 		
@@ -172,9 +174,9 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		
 //		String tgtType = "";
 		final TaskManager<?, ?> taskMgr = registrar.getService(SynchronousTaskManager.class);
-		final NetworkMergeTask nmTask = new NetworkMergeTask(cyNetworkFactory, cnm, netName, 
+		final NetworkMergeTask nmTask = new NetworkMergeTask(cyNetworkFactory, cnm, nvm, netName, 
 				matchingAttribute,	nodeAttributeMapping, edgeAttributeMapping, networkList, 
-				op, useDiference, null, inNetworkMerge, true, netViewCreator);	
+				op, useDiference, null, inNetworkMerge, true, netViewCreator, vmm);	
 
 	      final TaskIterator taskIterator = new TaskIterator(nmTask);
 	      taskIterator.append(new AbstractTask() {

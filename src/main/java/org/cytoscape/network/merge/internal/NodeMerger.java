@@ -298,7 +298,8 @@ public class NodeMerger {
 			}
 			catch (IllegalArgumentException ex)
 			{
-				if (verbose) System.out.println("IllegalArgumentException");
+				if (verbose) 
+					System.out.println("IllegalArgumentException: " + ex.getMessage());
 			}
 		} else if (!targColType.isList()) 
 		{ // simple type (Integer, Long, Double, Boolean)
@@ -321,6 +322,8 @@ public class NodeMerger {
 	}
 	catch (NullPointerException ex)
 	{
+		if (verbose) 
+			System.out.println("NullPointerException");
 		//  ?? not sure why we get here!
 	}
 	} else { // toattr is list type

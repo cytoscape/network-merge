@@ -1,5 +1,7 @@
 package org.cytoscape.network.merge.internal.task;
 
+import java.util.Collection;
+
 /*
  * #%L
  * Cytoscape Merge Impl (network-merge-impl)
@@ -41,6 +43,10 @@ import org.cytoscape.network.merge.internal.model.NetColumnMap;
 import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeValueMatcher;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
+import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
@@ -57,11 +63,12 @@ public class NetworkMergeTask extends AbstractTask {
 	private NetColumnMap matchingAttribute;
 	private AttributeMap nodeAttributeMapping;
 	private AttributeMap edgeAttributeMapping;
-
+	private VisualMappingManager vMapping;
 	private boolean inNetworkMerge;
 
 	private final CyNetworkFactory cnf;
 	private final CyNetworkManager networkManager;
+	private final CyNetworkViewManager networkViewManager;
 	private final String networkName;
 	
 	private Merge networkMerge;
@@ -72,6 +79,7 @@ private boolean asCommand;
 	 */
 	public NetworkMergeTask(final CyNetworkFactory cnf, 
 			final CyNetworkManager networkManager,
+			final CyNetworkViewManager networkViewManager,
 			final String networkName, 
 			final NetColumnMap matchingAttribute,
 			final AttributeMap nodeAttributeMapping, 
@@ -83,7 +91,8 @@ private boolean asCommand;
 //			final String tgtType,   //final Map<String, Map<String, Set<String>>> selectedNetworkAttributeIDType,
 			final boolean inNetworkMerge, 
 			final boolean asCommand, 
-			final CreateNetworkViewTaskFactory netViewCreator) 
+			final CreateNetworkViewTaskFactory netViewCreator,
+			final VisualMappingManager vmm) 
 	{
 		this.selectedNetworkList = selectedNetworkList;
 		this.operation = operation;
@@ -97,7 +106,9 @@ private boolean asCommand;
 		this.networkName = networkName;
 		this.cnf = cnf;
 		this.networkManager = networkManager;
+		this.networkViewManager = networkViewManager;
 		this.asCommand = asCommand;
+		this.vMapping = vmm;
 	}
 
 	@Override
@@ -138,7 +149,6 @@ static boolean verbose = Merge.verbose;
 		
 		// Merge everything
 		networkMerge.mergeNetwork(newNetwork, selectedNetworkList, operation, subtractOnlyUnconnectedNodes);
-
 		if (verbose) 
 			System.err.println("mergeNetwork" );
 		taskMonitor.setStatusMessage("Processing conflicts...");
@@ -164,6 +174,14 @@ static boolean verbose = Merge.verbose;
 		taskMonitor.setStatusMessage("Creating view...");
 		final Set<CyNetwork> networks = new HashSet<CyNetwork>();
 		networks.add(newNetwork);
+		CyNetwork firstSource = selectedNetworkList.get(0);
+		Collection<CyNetworkView> views = networkViewManager.getNetworkViews(firstSource);
+		if (views != null && !views.isEmpty())
+		{
+			CyNetworkView firstView = views.iterator().next();
+			VisualStyle vizStyle = vMapping.getVisualStyle(firstView);
+			vMapping.setCurrentVisualStyle(vizStyle);
+		}
 		insertTasksAfterCurrentTask(netViewCreator.createTaskIterator(networks));	
 		
 		taskMonitor.setProgress(1.0d);

@@ -46,6 +46,7 @@ import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
 import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.ServiceProperties;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.swing.DialogTaskManager;
@@ -59,19 +60,19 @@ public class CyActivator extends AbstractCyActivator {
 
 	@Override
 	public void start(BundleContext bc) {
-		CyNetworkNaming cyNetworkNamingServiceRef = getService(bc, CyNetworkNaming.class);
-		CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc, CyNetworkFactory.class);
+		CyNetworkNaming netName = getService(bc, CyNetworkNaming.class);
+		CyNetworkFactory netFctry = getService(bc, CyNetworkFactory.class);
 		CreateNetworkViewTaskFactory netViewCreator = getService(bc, CreateNetworkViewTaskFactory.class);
-		DialogTaskManager taskManagerServiceRef = getService(bc, DialogTaskManager.class);
-		CySwingApplication cySwingApplicationServiceRef = getService(bc, CySwingApplication.class);
-		CyApplicationManager cyApplicationManagerServiceRef = getService(bc, CyApplicationManager.class);
-		CyNetworkManager cyNetworkManagerServiceRef = getService(bc, CyNetworkManager.class);
-		CyNetworkViewManager cyNetworkViewManagerServiceRef = getService(bc, CyNetworkViewManager.class);
-		IconManager iconManagerServiceRef = getService(bc, IconManager.class);
+		DialogTaskManager taskMgr = getService(bc, DialogTaskManager.class);
+		CySwingApplication swingApp = getService(bc, CySwingApplication.class);
+		CyApplicationManager appMgr = getService(bc, CyApplicationManager.class);
+		CyNetworkManager netMgr = getService(bc, CyNetworkManager.class);
+		CyNetworkViewManager netViewMgr = getService(bc, CyNetworkViewManager.class);
+		IconManager icon = getService(bc, IconManager.class);
+		VisualMappingManager vmm = getService(bc, VisualMappingManager.class);
 
-		NetworkMergeAction networkMergeAction = new NetworkMergeAction(cySwingApplicationServiceRef, cyApplicationManagerServiceRef,
-				cyNetworkManagerServiceRef, cyNetworkViewManagerServiceRef, cyNetworkFactoryServiceRef, cyNetworkNamingServiceRef,
-				taskManagerServiceRef, iconManagerServiceRef, netViewCreator);
+		NetworkMergeAction networkMergeAction = new NetworkMergeAction(swingApp, appMgr,
+				netMgr, netViewMgr, netFctry, netName, taskMgr, icon, netViewCreator, vmm);
 
 		Properties props = new Properties();
 		props.setProperty(ServiceProperties.ID, "networkMergeAction");
