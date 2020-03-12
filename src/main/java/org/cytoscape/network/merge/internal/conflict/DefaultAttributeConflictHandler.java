@@ -67,7 +67,8 @@ public class DefaultAttributeConflictHandler implements AttributeConflictHandler
 
 			StringBuilder str = new StringBuilder();
 			for (String v : values) {
-				str.append(v + ";");
+				if (v != null && !v.isEmpty())
+					str.append(v + ";");
 			}
 
 			str.deleteCharAt(str.length() - 1);

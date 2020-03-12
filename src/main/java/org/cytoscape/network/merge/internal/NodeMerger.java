@@ -286,6 +286,7 @@ public class NodeMerger {
 				final String fromValue = fromCyRow.get(s, String.class);
 				final String o2 = targetRow.get(targetColumn.getName(), String.class);
 				
+				
 //				System.out.println("mergeAttribute: " + fromValue + " - " + o2);
 				if (o2 == null || o2.length() == 0)  // null or empty attribute
 				{
@@ -315,6 +316,7 @@ public class NodeMerger {
 			{
 				targetRow.set(targetColumn.getName(), o1);		
 				if (countColumn != null) targetRow.set(countColumn.getName(), 2);			
+//				System.out.println("mergeAttribute: " + o1);
 			}
 			else if (o1.equals(o2)) {}
 			else if (conflictCollector != null)
