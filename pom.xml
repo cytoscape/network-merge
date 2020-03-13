@@ -4,7 +4,7 @@
 
 	<groupId>org.cytoscape</groupId>
 	<artifactId>merge</artifactId>
-	<version>3.8.2</version>
+	<version>3.8.3</version>
 	<packaging>bundle</packaging>
 	<name>Network Merge</name>
 
