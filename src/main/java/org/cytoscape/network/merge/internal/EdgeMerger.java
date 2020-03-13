@@ -40,7 +40,7 @@ public class EdgeMerger  {
 		this.edgeAttributeMapping = edgeAttributeMapping;
 	}
 	//===============================================================================================
-boolean verbose = true;
+boolean verbose = false;
 
 	List<EdgeSpec> unmatchedEdges = new ArrayList<EdgeSpec>();
 	List<List<EdgeSpec>> matchedEdges = new ArrayList<List<EdgeSpec>>();
