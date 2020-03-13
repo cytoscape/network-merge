@@ -24,6 +24,14 @@ public class EdgeMerger  {
 	final CyNetwork targetNetwork;
 	final AttributeMap edgeAttributeMapping;
 	
+	/*
+	 * the class responsible for combining attributes of edges
+	 * 
+	 * @param CyNetwork targetNetwork,
+	 * @param NodeMerger nodeMerger,
+	 * @param AttributeConflictCollector conflictCollector
+	 * @param AttributeMap edgeAttributeMapping
+	 */
 	public EdgeMerger(CyNetwork targetNetwork, NodeMerger nodeMerger, final AttributeConflictCollector conflictCollector,final AttributeMap edgeAttributeMapping) 
 	{
 		this.targetNetwork = targetNetwork;
@@ -32,7 +40,7 @@ public class EdgeMerger  {
 		this.edgeAttributeMapping = edgeAttributeMapping;
 	}
 	//===============================================================================================
-boolean verbose = false;
+boolean verbose = true;
 
 	List<EdgeSpec> unmatchedEdges = new ArrayList<EdgeSpec>();
 	List<List<EdgeSpec>> matchedEdges = new ArrayList<List<EdgeSpec>>();
@@ -42,10 +50,17 @@ boolean verbose = false;
 	*	It makes EdgeSpecs and edgeMatch searches existing specs while tracking matched vs. unmatched
 	*	Then, process the lists of matched and unmatched edges into the target network, depending on Operation
  	 */
+    /**
+     * Go thru the list of all networks and produce a merged edge table
+     * @param networks
+     * @param targetNetwork 
+      * @param  operation -- union, intersection or difference
+     * @return conflict map from id to attrs if exist, null otherwise
+     */
 	public void mergeEdges(List<CyNetwork> networks, CyNetwork targetNetwork, Operation operation, NodeMerger nodeMerger, AttributeMap edgeAttributeMapping	) {
 
 // match edges
-		if (verbose) System.err.println(" F  ----------EDGE MERGE-----------------");
+		if (verbose) System.err.println(" ---------- EDGE MERGE -----------------");
 //		System.err.print("matchedEdgeList: " );
 
 		// create matchedEdges and unmatchedEdges lists
@@ -91,7 +106,7 @@ boolean verbose = false;
 				EdgeSpec e = new EdgeSpec(net1, edge);
 				for (List<EdgeSpec> specs : matchedEdges)
 					if (!edgeMatch(specs.get(0), e ))	
-						addEdgeToTarget(nodeMerger, new EdgeSpec(net1, edge));
+						addUnmatchedEdgeToTarget(nodeMerger, new EdgeSpec(net1, edge));
 			}
 		}
 		else		// union and intersection both include matchedEdges
@@ -106,7 +121,7 @@ boolean verbose = false;
 			if (operation == Operation.UNION) 
 			{
 				for (EdgeSpec unmatched: unmatchedEdges)
-					addEdgeToTarget(nodeMerger, unmatched);
+					addUnmatchedEdgeToTarget(nodeMerger, unmatched);
 			}	
 		}
 
@@ -168,30 +183,39 @@ boolean verbose = false;
 //
 	//----------------------------------------------------------------------------
 
-	private void addEdgeToTarget(NodeMerger nodeMerger, EdgeSpec edge) {
+	private void addUnmatchedEdgeToTarget(NodeMerger nodeMerger, EdgeSpec edge) {
 		
 		CyNode  targSrc = nodeMerger.targetLookup(edge.getSource());
 		CyNode targTarg = nodeMerger.targetLookup(edge.getTarget());
 		if (targSrc == null)  { if (verbose)  System.err.println("targSrc == null");    return; 	};
 		if (targTarg == null)  { if (verbose)  System.err.println("targTarg == null");   return; 	};
 		
-		CyEdge newEdge = targetNetwork.addEdge(targSrc, targTarg, edge.isDirected());
 		List<EdgeSpec> list = new ArrayList<EdgeSpec>();
 		list.add(edge);
-		mergeEdge(list, new EdgeSpec(targetNetwork, newEdge), targetNetwork);
+		mergeEdge(list, edge, targetNetwork);
 		if (verbose) 
-			System.out.println(edgeName(edge));
+			System.out.println("add Unmatched: " + edgeName(edge) );
 	}
 
 	//----------------------------------------------------------------
 	private void mergeEdge(final List<EdgeSpec> edges, EdgeSpec edge, CyNetwork newNetwork) 
 	{
-		CyNode targSrc = nodeMerger.targetLookup(edge.getSource());
-		CyNode targTarg = nodeMerger.targetLookup(edge.getTarget());
-		if (targSrc == null || targTarg == null) return;
+		if (edges == null || edges.isEmpty()) 		throw new IllegalArgumentException("no edges to merge");
+		CyNode origSrc = edge.getSource();
+		CyNode origTarg = edge.getTarget();
+		CyNode targSrc = nodeMerger.targetLookup(origSrc);
+		CyNode targTarg = nodeMerger.targetLookup(origTarg);
+//		boolean targNet = edge.getNet() == newNetwork;
+//		if (!targNet)
+//		{
+//			if ((targSrc == null || targTarg == null)) return;
+//			else
+//			{
+//				targSrc = origSrc;
+//				targTarg = origTarg;
+//			}
+//		}
 		CyEdge newEdge = targetNetwork.addEdge(targSrc, targTarg, edge.isDirected());
-		if (edges == null || edges.isEmpty() || newEdge == null) 		throw new IllegalArgumentException();
-
 		final int nattr = edgeAttributeMapping.getSizeMergedAttributes();
 		CyTable t = newNetwork.getRow(newEdge).getTable();
 
@@ -199,7 +223,11 @@ boolean verbose = false;
 			String str = edgeAttributeMapping.getMergedAttribute(i);
 			if (verbose) System.out.println("Matching " + str);
 			CyColumn attr_merged = t.getColumn(str);
-			if (attr_merged == null) continue;
+			if (attr_merged == null)
+				{
+				System.err.println("attr_merged= null");  continue;
+				
+				}
 				// merge
 			Map<EdgeSpec, CyColumn> edgeToColMap = new HashMap<EdgeSpec, CyColumn>();
 			for (CyNetwork net : edgeAttributeMapping.getNetworkSet()) 
@@ -210,8 +238,9 @@ boolean verbose = false;
 				{	
 					CyColumn col = table.getColumn(attrName);
 					for (EdgeSpec ed : edges) 
-							edgeToColMap.put(ed, col);
+						edgeToColMap.put(ed, col);
 					mergeAttribute(edgeToColMap, newEdge, attr_merged, newNetwork);
+					System.out.println(": " + attrName + " -> " + attr_merged);
 				}
 				
 			}
@@ -228,7 +257,8 @@ boolean verbose = false;
 		final CyRow cyRow = network.getRow(targetEdge);
 		final ColumnType colType = ColumnType.getType(targetColumn);
 
-	if (verbose)	System.out.println("Merging " + targetColumn.getName() + " " + colType);
+	if (verbose)	
+		System.out.print("Merging: " + targetColumn.getName() + " [" + colType + "]");
 
 		
 		for (EdgeSpec from : edgeColumnMap.keySet()) {

@@ -487,7 +487,8 @@ public class NetworkMergeDialog extends JDialog {
 
 					for (int i = indices.length - 1; i >= 0; i--) {
 						CyNetwork removed = unselectedNetData.removeElement(indices[i]);
-						selectedNetData.add(removed);
+//						int idx = selectedNetData.getSize();
+								selectedNetData.add(0, removed);
 						addRemoveAttributeMapping(removed, true);
 					}
 

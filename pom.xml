@@ -6,7 +6,7 @@
 	<artifactId>merge</artifactId>
 	<version>3.8.2</version>
 	<packaging>bundle</packaging>
-	<name>Merge</name>
+	<name>Network Merge</name>
 
 	<properties>
 		<bundle.symbolicName>org.cytoscape.merge</bundle.symbolicName>
