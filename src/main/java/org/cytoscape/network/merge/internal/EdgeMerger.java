@@ -40,7 +40,7 @@ public class EdgeMerger  {
 		this.edgeAttributeMapping = edgeAttributeMapping;
 	}
 	//===============================================================================================
-boolean verbose = false;
+boolean verbose = true;
 
 	List<EdgeSpec> unmatchedEdges = new ArrayList<EdgeSpec>();
 	List<List<EdgeSpec>> matchedEdges = new ArrayList<List<EdgeSpec>>();
@@ -230,7 +230,7 @@ boolean verbose = false;
 				}
 				// merge
 			Map<EdgeSpec, CyColumn> edgeToColMap = new HashMap<EdgeSpec, CyColumn>();
-			for (CyNetwork net : edgeAttributeMapping.getNetworkSet()) 
+			for (CyNetwork net : nodeMerger.getNetworkList())  //edgeAttributeMapping.getNetworkSet()) 
 			{
 				final String attrName = edgeAttributeMapping.getOriginalAttribute(net, i);
 				final CyTable table = edgeAttributeMapping.getCyTable(net);
@@ -276,7 +276,6 @@ boolean verbose = false;
 				{
 					fromValue = fromCyRow.get(fromColumn.getName(), String.class);
 					o2 = cyRow.get(targetColumn.getName(), String.class);
-				
 				}
 				catch (Exception e)
 				{
@@ -294,12 +293,22 @@ boolean verbose = false;
 				}
 			} else if (!colType.isList()) { // simple type (Integer, Long,
 											// Double, Boolean)
-				Object o1 = fromCyRow.get(fromColumn.getName(), fromColType.getType());
+				
+				String colName = fromColumn.getName();
+				var fColType = fromColType.getType();
+				Object o1 = fromCyRow.get(colName, fColType);
+				
 				if (fromColType != colType) {
 					o1 = colType.castService(o1);
 				}
+				if (verbose)	
+					System.out.println(colName + " " + fColType+ " " + o1);
 
-				Object o2 = cyRow.get(targetColumn.getName(), colType.getType());
+				String tColName = targetColumn.getName();
+				var tColType = colType.getType();
+				Object o2 = cyRow.get(tColName, tColType);
+				if (verbose)	
+					System.out.println(tColName + " " + tColType+ " " + o2);
 				if (o2 == null) {
 					cyRow.set(targetColumn.getName(), o1);
 					// continue;

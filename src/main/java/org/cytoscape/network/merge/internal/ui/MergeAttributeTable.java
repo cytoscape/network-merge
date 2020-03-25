@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -274,13 +275,12 @@ class MergeAttributeTable extends JTable {
 					ColumnType.getReasonableCompatibleConversionType(types).toList());
 			update = true;
 		} else {
-			Set<CyNetwork> networks = matchingAttribute.getNetworkSet();
+			List<CyNetwork> networks = matchingAttribute.getNetworkList();
 			Iterator<CyNetwork> it = networks.iterator();
-			if (!it.hasNext())  // empty
+			if (!networks.isEmpty())  // empty
 				indexMatchingAttr = -1;
 
-			while (it.hasNext()) {
-				CyNetwork network = it.next();
+			for (CyNetwork network : networks) {
 				String attr = matchingAttribute.get(network).getName();
 				String old = attributeMapping.setOriginalAttribute(network, attr, indexMatchingAttr);
 				if (attr.compareTo(old) != 0) 

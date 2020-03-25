@@ -49,6 +49,7 @@ public class NodeMerger {
 	private CyColumn countColumn;
 	private CyColumn matchColumn;
 	private List<CyNetwork> networks;
+	public List<CyNetwork> getNetworkList() {		return networks;	}
 	
 	public NodeMerger(final AttributeConflictCollector conflictCollector, AttributeMap nodeAttributeMapping) {
 		this.conflictCollector = conflictCollector;

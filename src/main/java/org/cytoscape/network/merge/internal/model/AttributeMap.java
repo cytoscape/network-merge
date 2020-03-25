@@ -49,7 +49,7 @@ import org.cytoscape.network.merge.internal.util.ColumnType;
 
 /**
  * Class to store the information how to map the attributes 
- * in the original networks to those in the resulting network
+ * in the original networks map to those in the resulting network
  * 
  * 
  */
@@ -394,7 +394,7 @@ final public class AttributeMap {
                  // if yes, add to that group; otherwise create a new one
             List<String> attrs = attributeMapping.get(net);
             if (attrs!=null) { // this network already exist
-                System.err.println("Error: this network already exist");
+                System.err.println("Error: this network already exists");
                 return;
             }
 
@@ -436,7 +436,7 @@ final public class AttributeMap {
     }
     
     
-    public Set<CyNetwork> getNetworkSet() {        return attributeMapping.keySet();    }
+    public Set<CyNetwork> getNetworkSet() {   return attributeMapping.keySet();    }
 
     
     public int size()		 {        return attributeMapping.size();    }   

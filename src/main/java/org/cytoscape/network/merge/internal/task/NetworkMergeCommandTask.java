@@ -335,11 +335,8 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		for (int col = 0; col < edgeMap.columnsToMerge.size(); col++) 
 		{
 			ColumnMergeRecord rec  = edgeMap.columnsToMerge.get(col);
-			for (int i=0; i<networkList.size(); i++)
-			{
-				CyNetwork net = networkList.get(i);
+			for (CyNetwork net : networkList)
 				edgeAttributeMapping.setOriginalAttribute(net, rec.columnNames.get(net), rec.outName);
-			}
 			edgeAttributeMapping.setColumnMerge(col, rec);
 		}
 		return edgeAttributeMapping;
