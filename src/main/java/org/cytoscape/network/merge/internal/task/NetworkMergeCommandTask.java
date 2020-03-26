@@ -3,7 +3,6 @@ package org.cytoscape.network.merge.internal.task;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -17,13 +16,14 @@ import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.network.merge.internal.Merge;
 import org.cytoscape.network.merge.internal.NetworkMerge;
-import org.cytoscape.network.merge.internal.NodeSpec;
 import org.cytoscape.network.merge.internal.model.AttributeMap;
 import org.cytoscape.network.merge.internal.model.NetColumnMap;
-import org.cytoscape.network.merge.internal.util.ColumnType;
+import org.cytoscape.network.merge.internal.model.NodeSpec;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
+import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.ContainsTunables;
 import org.cytoscape.work.FinishStatus;
@@ -39,19 +39,7 @@ import org.cytoscape.work.json.JSONResult;
 public class NetworkMergeCommandTask extends AbstractTask implements ObservableTask {
 
 	@ContainsTunables
-//	@Tunable(description="Network", context="nogui", longDescription="The name of the resultant network", exampleStringValue=StringToModel.CY_NETWORK_EXAMPLE_STRING)
-//	public CyNetwork network;
 
-//	@Tunable (description="Namespace for table", context="nogui", longDescription="A syntactic prefix used to differentiate the table from others that may contain the same columns.")
-//	public String namespace = "a OR b";
-
-//	  @Tunable(
-//				description = "NetworkList", context= Tunable.NOGUI_CONTEXT,
-//				longDescription="The list of networks to merge", 
-//				exampleStringValue = "net1, net2"
-//		)
-//	String networks = "<this and that>";
-//
 	  @Tunable(
 				description = "Type of Merge", context= Tunable.NOGUI_CONTEXT,
 				longDescription="Whether the networks are merged by union, intersection or difference", 
@@ -146,6 +134,8 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		CyNetworkFactory cyNetworkFactory = registrar.getService(CyNetworkFactory.class);
 		CreateNetworkViewTaskFactory netViewCreator = registrar.getService(CreateNetworkViewTaskFactory.class);
 		CyNetworkManager cnm = registrar.getService(CyNetworkManager.class);
+		CyNetworkViewManager nvm = registrar.getService(CyNetworkViewManager.class);
+		VisualMappingManager vmm = registrar.getService(VisualMappingManager.class);
 
 		if (verbose) System.err.println("A: build network list ---------------- " );
 		
@@ -184,9 +174,9 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		
 //		String tgtType = "";
 		final TaskManager<?, ?> taskMgr = registrar.getService(SynchronousTaskManager.class);
-		final NetworkMergeTask nmTask = new NetworkMergeTask(cyNetworkFactory, cnm, netName, 
+		final NetworkMergeTask nmTask = new NetworkMergeTask(cyNetworkFactory, cnm, nvm, netName, 
 				matchingAttribute,	nodeAttributeMapping, edgeAttributeMapping, networkList, 
-				op, useDiference, null, inNetworkMerge, true, netViewCreator);	
+				op, useDiference, null, inNetworkMerge, true, netViewCreator, vmm);	
 
 	      final TaskIterator taskIterator = new TaskIterator(nmTask);
 	      taskIterator.append(new AbstractTask() {
@@ -345,11 +335,8 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		for (int col = 0; col < edgeMap.columnsToMerge.size(); col++) 
 		{
 			ColumnMergeRecord rec  = edgeMap.columnsToMerge.get(col);
-			for (int i=0; i<networkList.size(); i++)
-			{
-				CyNetwork net = networkList.get(i);
+			for (CyNetwork net : networkList)
 				edgeAttributeMapping.setOriginalAttribute(net, rec.columnNames.get(net), rec.outName);
-			}
 			edgeAttributeMapping.setColumnMerge(col, rec);
 		}
 		return edgeAttributeMapping;
@@ -406,7 +393,6 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 	public static String edgeName(CyNetwork net, CyEdge edge)
 	{
 		return getNodeName(net,edge.getSource()) + " -> " + getNodeName(net,edge.getTarget());
-		
 	}
 	
 	public static String getEdgeSet(CyNetwork netw, Set<CyEdge> edgeSet) {

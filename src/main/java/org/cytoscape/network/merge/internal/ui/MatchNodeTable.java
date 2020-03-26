@@ -146,7 +146,7 @@ class MatchNodeTable extends JTable {
         }
             
         private void resetNetworks() {
-            networks = new ArrayList<CyNetwork>(matchingAttribute.getNetworkSet());
+            networks = new ArrayList<CyNetwork>(matchingAttribute.getNetworkList());
             //TODO: sort networks maybe alphabetically
         }
         

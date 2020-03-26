@@ -139,6 +139,14 @@ public enum ColumnType {
 	}
 
 	public static ColumnType getReasonableCompatibleConversionType(Set<ColumnType> types) {
+		
+//		return ColumnType.STRING;
+		for (ColumnType type : types)
+		{
+			boolean li = type.isList;
+			ColumnType ret = type.toPlain();
+
+		}
 		Iterator<ColumnType> it = types.iterator();
 		ColumnType curr = it.next();
 		boolean li = curr.isList;

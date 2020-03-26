@@ -67,16 +67,24 @@ public class DefaultAttributeConflictHandler implements AttributeConflictHandler
 
 			StringBuilder str = new StringBuilder();
 			for (String v : values) {
-				str.append(v + ";");
+				if (v != null && !v.isEmpty())
+					str.append(v + ";");
 			}
-
-			str.deleteCharAt(str.length() - 1);
-			row.set(toColumn.getName(), str.toString());
+			String out = stripTrailingSemi(str);
+			// System.out.println(out);
+			row.set(toColumn.getName(),out);
 
 			return true;
 		}
 
 		// FIXME: how about Integer, Double, Boolean?
 		return false;
+	}
+
+	private String stripTrailingSemi(StringBuilder str) {
+		String out = str.toString();
+		if (out.endsWith(";"))
+			out = out.substring(0,out.length()-1);
+		return out;
 	}
 }
