@@ -30,8 +30,11 @@ import static org.cytoscape.util.swing.LookAndFeelUtil.isWinLAF;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.Vector;
@@ -56,6 +59,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListCellRenderer;
@@ -420,7 +424,14 @@ public class NetworkMergeDialog extends JDialog {
 					}
 				}
 			});
-		}
+			// add a double click listener
+			unselectedNetLs.addMouseListener(new MouseAdapter() {
+				    public void mousePressed(MouseEvent mouseEvent) {
+				        if (mouseEvent.getClickCount() == 2 )
+				        	hitMoveRight();
+				    }
+				});
+			}
 		
 		return unselectedNetLs;
 	}
@@ -471,50 +482,54 @@ public class NetworkMergeDialog extends JDialog {
 			moveRightBtn.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent evt) {
-					int[] indices = getUnselectedNetLs().getSelectedIndices();
-					if (indices == null || indices.length == 0) {
-						return;
-					}
-
-					if (getOperation() == Operation.DIFFERENCE && selectedNetData.getSize() + indices.length > 2) {
-						JOptionPane
-								.showMessageDialog(
-										NetworkMergeDialog.this,
-										"Difference operation only supports two networks. If you need to replace the selected network, remove it first and select the new one.",
-										"Warning", JOptionPane.WARNING_MESSAGE);
-						return;
-					}
-
-					for (int i = indices.length - 1; i >= 0; i--) {
-						CyNetwork removed = unselectedNetData.removeElement(indices[i]);
-//						int idx = selectedNetData.getSize();
-								selectedNetData.add(0, removed);
-						addRemoveAttributeMapping(removed, true);
-					}
-
-					if (unselectedNetData.getSize() == 0) {
-						getUnselectedNetLs().clearSelection();
-						moveRightBtn.setEnabled(false);
-					} else {
-						int minindex = getUnselectedNetLs().getMinSelectionIndex();
-						if (minindex >= unselectedNetData.getSize()) {
-							minindex = 0;
-						}
-						getUnselectedNetLs().setSelectedIndex(minindex);
-					}
-
-					getSelectedNetLs().repaint();
-					getUnselectedNetLs().repaint();
-					updateOKButton();
-					updateAttributeTable();
-					updateMergeAttributeTable();
-				}
-			});
+					hitMoveRight();		// AST:  moved to method, so double click can call it
+				} });
 		}
 		
 		return moveRightBtn;
 	}
 	
+	public void	hitMoveRight()		// called by the MergeAttributeTable
+	{
+		int[] indices = getUnselectedNetLs().getSelectedIndices();
+		if (indices == null || indices.length == 0) {
+			return;
+		}
+
+		if (getOperation() == Operation.DIFFERENCE && selectedNetData.getSize() + indices.length > 2) {
+			JOptionPane
+					.showMessageDialog(
+							NetworkMergeDialog.this,
+							"Difference operation only supports two networks. If you need to replace the selected network, remove it first and select the new one.",
+							"Warning", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		for (int i = indices.length - 1; i >= 0; i--) {
+			CyNetwork removed = unselectedNetData.removeElement(indices[i]);
+//				int idx = selectedNetData.getSize();
+					selectedNetData.add(removed);
+			addRemoveAttributeMapping(removed, true);
+		}
+
+		if (unselectedNetData.getSize() == 0) {
+			getUnselectedNetLs().clearSelection();
+			moveRightBtn.setEnabled(false);
+		} else {
+			int minindex = getUnselectedNetLs().getMinSelectionIndex();
+			if (minindex >= unselectedNetData.getSize()) {
+				minindex = 0;
+			}
+			getUnselectedNetLs().setSelectedIndex(minindex);
+		}
+
+		getSelectedNetLs().repaint();
+		getUnselectedNetLs().repaint();
+		updateOKButton();
+		updateAttributeTable();
+		updateMergeAttributeTable();
+	}
+		
 	private JButton getMoveLeftBtn() {
 		if (moveLeftBtn == null) {
 			moveLeftBtn = new JButton(IconManager.ICON_ANGLE_LEFT);
@@ -688,7 +703,7 @@ public class NetworkMergeDialog extends JDialog {
 					.addComponent(getIdMappingCkb())
 					.addComponent(howLbl)
 					.addComponent(getMergeAttrTp(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-					.addComponent(getInNetMergeCkb())
+//					.addComponent(getInNetMergeCkb())
 			);
 			layout.setVerticalGroup(layout.createSequentialGroup()
 					.addComponent(matchingColumnsLbl)
@@ -696,7 +711,7 @@ public class NetworkMergeDialog extends JDialog {
 					.addComponent(getIdMappingCkb())
 					.addComponent(howLbl)
 					.addComponent(getMergeAttrTp(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-					.addComponent(getInNetMergeCkb())
+//					.addComponent(getInNetMergeCkb())
 			);
 		}
 

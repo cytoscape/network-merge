@@ -40,7 +40,7 @@ public class EdgeMerger  {
 		this.edgeAttributeMapping = edgeAttributeMapping;
 	}
 	//===============================================================================================
-boolean verbose = true;
+boolean verbose = false;
 
 	List<EdgeSpec> unmatchedEdges = new ArrayList<EdgeSpec>();
 	List<List<EdgeSpec>> matchedEdges = new ArrayList<List<EdgeSpec>>();
@@ -224,10 +224,10 @@ boolean verbose = true;
 			if (verbose) System.out.println("Matching " + str);
 			CyColumn attr_merged = t.getColumn(str);
 			if (attr_merged == null)
-				{
-				System.err.println("attr_merged= null");  continue;
-				
-				}
+			{
+				if (verbose)  System.err.println("attr_merged= null");  
+				continue;
+			}
 				// merge
 			Map<EdgeSpec, CyColumn> edgeToColMap = new HashMap<EdgeSpec, CyColumn>();
 			for (CyNetwork net : nodeMerger.getNetworkList())  //edgeAttributeMapping.getNetworkSet()) 
@@ -240,7 +240,7 @@ boolean verbose = true;
 					for (EdgeSpec ed : edges) 
 						edgeToColMap.put(ed, col);
 					mergeAttribute(edgeToColMap, newEdge, attr_merged, newNetwork);
-					System.out.println(": " + attrName + " -> " + attr_merged);
+					if (verbose) System.out.println(": " + attrName + " -> " + attr_merged);
 				}
 				
 			}

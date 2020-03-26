@@ -277,7 +277,7 @@ class MergeAttributeTable extends JTable {
 		} else {
 			List<CyNetwork> networks = matchingAttribute.getNetworkList();
 			Iterator<CyNetwork> it = networks.iterator();
-			if (!networks.isEmpty())  // empty
+			if (networks.isEmpty())  // empty
 				indexMatchingAttr = -1;
 
 			for (CyNetwork network : networks) {
