@@ -117,7 +117,6 @@ final public class AttributeMap {
     
     public String setMergedAttribute(final int index, final String attributeName) {
         if (attributeName==null)   throw new NullPointerException("Column name is null.");
-        System.out.println("setMergedAttribute " + index + " to " + attributeName);
         String ret = mergedAttributes.set(index, attributeName);
         resetMergedAttributeType(index,false);
         return ret;
@@ -371,7 +370,7 @@ final public class AttributeMap {
     public void addNetwork(final CyNetwork net, CyTable table) {
         if (net==null || table==null)
             throw new NullPointerException();
-        
+
         cyTables.put(net, table);
         
         final List<String> attributeNames = new ArrayList<String>();

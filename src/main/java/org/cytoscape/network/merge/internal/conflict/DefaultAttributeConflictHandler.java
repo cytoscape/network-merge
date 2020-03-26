@@ -71,7 +71,7 @@ public class DefaultAttributeConflictHandler implements AttributeConflictHandler
 					str.append(v + ";");
 			}
 			String out = stripTrailingSemi(str);
-			System.out.println(out);
+			// System.out.println(out);
 			row.set(toColumn.getName(),out);
 
 			return true;

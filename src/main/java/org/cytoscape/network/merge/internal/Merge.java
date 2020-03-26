@@ -49,16 +49,15 @@ public class Merge  {
 	 * @param taskMonitor
 	 */
 
-	
-	public Merge(
-			final NetColumnMap matchingAttribute,
-			final AttributeMap nodeAttributeMapping, 
-			final AttributeMap edgeAttributeMapping,
-			final NodeMerger nodeMerger, 
-			final EdgeMerger edgMerger, 
-			AttributeValueMatcher attributeValueMatcher,
-			boolean asCommand,
-			final TaskMonitor taskMonitor) {
+
+	public Merge(final NetColumnMap matchingAttribute,
+	             final AttributeMap nodeAttributeMapping, 
+	             final AttributeMap edgeAttributeMapping,
+	             final NodeMerger nodeMerger, 
+	             final EdgeMerger edgMerger, 
+	             AttributeValueMatcher attributeValueMatcher,
+	             boolean asCommand,
+	             final TaskMonitor taskMonitor) {
 
 		if (matchingAttribute == null) 		throw new java.lang.NullPointerException("matchingAttribute");
 		if (nodeAttributeMapping == null) 	throw new java.lang.NullPointerException("nodeAttributeMapping");
@@ -66,7 +65,7 @@ public class Merge  {
 		if (nodeMerger == null) 			throw new java.lang.NullPointerException("nodeMerger");
 		if (edgMerger == null) 				throw new java.lang.NullPointerException("edgMerger");
 		if (attributeValueMatcher == null) 	throw new java.lang.NullPointerException("attributeValueMatcher");
-		
+
 		this.matchingAttribute = matchingAttribute;
 		this.nodeAttributeMap = nodeAttributeMapping;
 		this.edgeAttributeMap = edgeAttributeMapping;
@@ -75,9 +74,9 @@ public class Merge  {
 		this.attributeValueMatcher = attributeValueMatcher;
 		this.asCommand = asCommand;
 		this.taskMonitor = taskMonitor;
-		}
+	}
 
-	
+
 	/*
 	 *  Logic
 	 *  	A:	Create a list of networks
@@ -107,15 +106,18 @@ public class Merge  {
 	CyColumn countColumn = null;
 	CyColumn edgeMatchColumn = null;
 	CyColumn edgeCountColumn = null;
-	
+
 	//=================================================================================
 		private List<CyNetwork> networks;
 		private CyNetwork targetNetwork;
 		private Operation operation;
 
 //		NetNodeSetMap differenceNodeList = null;
-		
-		public CyNetwork mergeNetwork(final CyNetwork mergedNetwork, final List<CyNetwork> fromNetworks, final Operation op, final boolean subtractOnlyUnconnectedNodes) {
+
+		public CyNetwork mergeNetwork(final CyNetwork mergedNetwork, 
+		                              final List<CyNetwork> fromNetworks, 
+		                              final Operation op, 
+		                              final boolean subtractOnlyUnconnectedNodes) {
 			// Null checks for required fields...
 			if (verbose) System.out.println("B: mergeNetwork");
 
@@ -129,10 +131,10 @@ public class Merge  {
 			if (fromNetworks.isEmpty()) 		throw new IllegalArgumentException("No source networks!");
 			if (operation == Operation.DIFFERENCE && networks.size() != 2) 		throw new IllegalArgumentException("Difference only works with two networks");
 			//long startTime = System.currentTimeMillis();
-			
+
 			preprocess();
 			if(interrupted) 			return null;		// Check cancel status
-			
+
 			taskMonitor.setStatusMessage("Merging nodes...");
 			nodeMerger.mergeNodes(networks, targetNetwork, operation, nodeAttributeMap, matchingAttribute, attributeValueMatcher, matchColumn, countColumn);
 			if(!interrupted) 			
@@ -140,18 +142,18 @@ public class Merge  {
 				taskMonitor.setStatusMessage("Merging edges...");
 				edgeMerger.mergeEdges(networks, targetNetwork, operation, nodeMerger, edgeAttributeMap);
 			}
-		
+
 			if (verbose) System.err.println("H return mergedNetwork ---------------------------------------" );
-			
+
 			// #12658
 			CyNetwork firstSource = networks.get(0);
-			
+
 			return mergedNetwork;
 		}
 	public void interrupt()	{		interrupted = true;	}
 		//=================================================================================
 	protected void preprocess() {
-		
+
 //		matchingAttribute.addNetwork(target);
 		setAttributeTypes(targetNetwork.getDefaultNodeTable(), nodeAttributeMap);
 		setAttributeTypes(targetNetwork.getDefaultEdgeTable(), edgeAttributeMap);
@@ -193,21 +195,26 @@ public class Merge  {
 		{
 			String attr = attributeMapping.getMergedAttribute(i);
 			if (table.getColumn(attr) != null) 		continue; // TODO: check if the type is the same
-				
+
 			final ColumnType type = attributeMapping.getMergedAttributeType(i);
 			final boolean isImmutable = attributeMapping.getMergedAttributeMutability(i);
-			if (type.isList()) 	table.createListColumn(attr, type.getType(), isImmutable);
-			else 				table.createColumn(attr, type.getType(), isImmutable);
+			if (type.isList()) 
+				table.createListColumn(attr, type.getType(), isImmutable);
+			else
+				table.createColumn(attr, type.getType(), isImmutable);
 			if (verbose) System.out.println("Creating column: " + attr);
-			
+
 		}
 		if (verbose) System.out.println(table.getTitle() + " has size "  + n);
 	}
 //===============================================================================================
 
 //===============================================================================================
-	public void setWithinNetworkMerge(boolean within) {		withinNetworkMerge = within;	}
-	
+	public void setWithinNetworkMerge(boolean within) {
+		withinNetworkMerge = within;
+		nodeMerger.setWithinNetworkMerge(within);
+		edgeMerger.setWithinNetworkMerge(within);
+	}
 
 	static public void dumpRow(CyNode node)
 	{
@@ -222,7 +229,7 @@ public class Merge  {
 			System.out.print(s + ":" + vals.get(s) + ", ") ;
 		System.out.println("}");
 	}
-	
+
 	//===============================================================================================
 	private void dumpNodeColumnMap(Map<CyNode, CyColumn> map)
 	{
@@ -230,7 +237,7 @@ public class Merge  {
 			System.out.print(id.getSUID() + ">" + map.get(id).getName() + ". ");
 		System.out.println();
 	}
-	
+
 
 
 }

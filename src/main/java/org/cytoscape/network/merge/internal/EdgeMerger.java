@@ -22,8 +22,9 @@ public class EdgeMerger  {
 	protected final AttributeConflictCollector conflictCollector;
 	NodeMerger nodeMerger;
 	final CyNetwork targetNetwork;
-	final AttributeMap edgeAttributeMapping;
-	
+	AttributeMap edgeAttributeMapping;
+	protected boolean withinNetworkMerge = false;
+
 	/*
 	 * the class responsible for combining attributes of edges
 	 * 
@@ -32,15 +33,14 @@ public class EdgeMerger  {
 	 * @param AttributeConflictCollector conflictCollector
 	 * @param AttributeMap edgeAttributeMapping
 	 */
-	public EdgeMerger(CyNetwork targetNetwork, NodeMerger nodeMerger, final AttributeConflictCollector conflictCollector,final AttributeMap edgeAttributeMapping) 
+	public EdgeMerger(CyNetwork targetNetwork, NodeMerger nodeMerger, final AttributeConflictCollector conflictCollector) 
 	{
 		this.targetNetwork = targetNetwork;
 		this.nodeMerger = nodeMerger;
 		this.conflictCollector = conflictCollector;
-		this.edgeAttributeMapping = edgeAttributeMapping;
 	}
 	//===============================================================================================
-boolean verbose = false;
+	boolean verbose = false;
 
 	List<EdgeSpec> unmatchedEdges = new ArrayList<EdgeSpec>();
 	List<List<EdgeSpec>> matchedEdges = new ArrayList<List<EdgeSpec>>();
@@ -50,28 +50,44 @@ boolean verbose = false;
 	*	It makes EdgeSpecs and edgeMatch searches existing specs while tracking matched vs. unmatched
 	*	Then, process the lists of matched and unmatched edges into the target network, depending on Operation
  	 */
-    /**
-     * Go thru the list of all networks and produce a merged edge table
-     * @param networks
-     * @param targetNetwork 
-      * @param  operation -- union, intersection or difference
-     * @return conflict map from id to attrs if exist, null otherwise
-     */
-	public void mergeEdges(List<CyNetwork> networks, CyNetwork targetNetwork, Operation operation, NodeMerger nodeMerger, AttributeMap edgeAttributeMapping	) {
+
+	/**
+   * Go thru the list of all networks and produce a merged edge table
+   * @param networks
+   * @param targetNetwork 
+   * @param operation -- union, intersection or difference
+   * @param nodeMerger 
+   * @param edgeAttributeMapping 
+   * @return conflict map from id to attrs if exist, null otherwise
+   */
+	public void mergeEdges(List<CyNetwork> networks, 
+	                       CyNetwork targetNetwork, 
+	                       Operation operation, 
+	                       NodeMerger nodeMerger, 
+	                       AttributeMap edgeAttributeMapping	) {
+		this.edgeAttributeMapping = edgeAttributeMapping;
+
 
 // match edges
 		if (verbose) System.err.println(" ---------- EDGE MERGE -----------------");
 //		System.err.print("matchedEdgeList: " );
 
 		// create matchedEdges and unmatchedEdges lists
+		boolean first = true;
 		for (CyNetwork net : networks)
 		{
 			if (verbose) System.out.println("adding edges from " + NetworkMergeCommandTask.getNetworkName(net));
-			for (CyEdge edge : net.getEdgeList())
-				processEdge(new EdgeSpec(net,edge));
+			if (first && !withinNetworkMerge) {
+				first = false;
+				for (CyEdge edge : net.getEdgeList())
+					unmatchedEdges.add(new EdgeSpec(net, edge));
+			} else {
+				for (CyEdge edge : net.getEdgeList())
+					processEdge(new EdgeSpec(net,edge));
+			}
 			if (verbose) System.out.println(matchedEdges.size() + " / " + unmatchedEdges.size());
 		}
-		
+
 		// dump
 		if (verbose) 
 		{
@@ -86,8 +102,8 @@ boolean verbose = false;
 				System.out.println(e.toString());
 			}
 		}
-		
-		
+
+
 		// if its the intersection, there must be an edge for every network
 		if (operation == Operation.INTERSECTION) 
 		{
@@ -96,7 +112,7 @@ boolean verbose = false;
 					matchedEdges.remove(i);
 		} 
  
-		
+
 		// if it's the difference, add edges for each unmatched edge from the first network
 		if (operation == Operation.DIFFERENCE) 
 		{
@@ -116,7 +132,7 @@ boolean verbose = false;
 				if (edges == null || edges.isEmpty()) return;
 				mergeEdge(edges, edges.get(0), targetNetwork);
 			}
-			
+
 			// for union operation, we want unmatched edges too
 			if (operation == Operation.UNION) 
 			{
@@ -126,6 +142,11 @@ boolean verbose = false;
 		}
 
 	}
+
+	protected void setWithinNetworkMerge(boolean within) {
+		withinNetworkMerge = within;
+	}
+
 	//----------------------------------------------------------------------------
 	/*  compare an edge to our matched and unmatched lists, adding it to the 
 	 * 	appropriate list.  When you add a match to an unmatched edge, delete it from unmatchedEdges
@@ -154,10 +175,11 @@ boolean verbose = false;
 				matches.add(unmatched);
 				matchedEdges.add(matches);
 				unmatchedEdges.remove(i);
-				if (verbose) System.out.println("adding edge match");
+				if (verbose) System.out.println("adding edge match "+edge);
 				return;
 			}
 		}
+		if (verbose) System.out.println("adding unmatched edge "+edge);
 		unmatchedEdges.add(edge);
 	}
 
@@ -169,27 +191,33 @@ boolean verbose = false;
 	}
 
 	private boolean edgeMatch(EdgeSpec test, EdgeSpec e) {
-		
-		boolean sourceMatches = nodeMerger.matchNode(test.net, test.getSource(),e.net, e.getSource());
-		boolean targetMatches = nodeMerger.matchNode(test.net, test.getTarget(), e.net, e.getTarget());
-		boolean fullMatch =  sourceMatches && targetMatches;
-		if (fullMatch || test.isDirected())  return fullMatch;
-		
+
+		boolean sourceMatches = nodeMerger.matchNodeFast(test.getSource(), e.getSource());
+		boolean targetMatches = nodeMerger.matchNodeFast(test.getTarget(), e.getTarget());
+		boolean interactionMatches = test.getInteraction().equals(e.getInteraction());
+		// boolean sourceMatches = nodeMerger.matchNode(test.net, test.getSource(), e.net, e.getSource());
+		// boolean targetMatches = nodeMerger.matchNode(test.net, test.getTarget(), e.net, e.getTarget());
+		boolean fullMatch =  sourceMatches && targetMatches && interactionMatches;
+		// if (fullMatch || test.isDirected())  return fullMatch;
+		if (fullMatch || (test.isDirected() && !withinNetworkMerge))  return fullMatch;
+
 		// undirected graphs can also match in opposite order
-		sourceMatches = nodeMerger.matchNode(test.net, test.getSource(), e.net, e.getTarget());
-		targetMatches = nodeMerger.matchNode(test.net, test.getTarget(), e.net, e.getSource());
-		return sourceMatches && targetMatches;
+		sourceMatches = nodeMerger.matchNodeFast(test.getSource(), e.getTarget());
+		targetMatches = nodeMerger.matchNodeFast(test.getTarget(), e.getSource());
+		// sourceMatches = nodeMerger.matchNode(test.net, test.getSource(), e.net, e.getTarget());
+		// targetMatches = nodeMerger.matchNode(test.net, test.getTarget(), e.net, e.getSource());
+		return sourceMatches && targetMatches && interactionMatches;
 	}
 //
 	//----------------------------------------------------------------------------
 
 	private void addUnmatchedEdgeToTarget(NodeMerger nodeMerger, EdgeSpec edge) {
-		
-		CyNode  targSrc = nodeMerger.targetLookup(edge.getSource());
+
+		CyNode targSrc = nodeMerger.targetLookup(edge.getSource());
 		CyNode targTarg = nodeMerger.targetLookup(edge.getTarget());
 		if (targSrc == null)  { if (verbose)  System.err.println("targSrc == null");    return; 	};
 		if (targTarg == null)  { if (verbose)  System.err.println("targTarg == null");   return; 	};
-		
+
 		List<EdgeSpec> list = new ArrayList<EdgeSpec>();
 		list.add(edge);
 		mergeEdge(list, edge, targetNetwork);
@@ -228,7 +256,7 @@ boolean verbose = false;
 				if (verbose)  System.err.println("attr_merged= null");  
 				continue;
 			}
-				// merge
+			// merge
 			Map<EdgeSpec, CyColumn> edgeToColMap = new HashMap<EdgeSpec, CyColumn>();
 			for (CyNetwork net : nodeMerger.getNetworkList())  //edgeAttributeMapping.getNetworkSet()) 
 			{
@@ -242,17 +270,20 @@ boolean verbose = false;
 					mergeAttribute(edgeToColMap, newEdge, attr_merged, newNetwork);
 					if (verbose) System.out.println(": " + attrName + " -> " + attr_merged);
 				}
-				
+
 			}
 		}
 	}
 	//----------------------------------------------------------------------------
-	private <CyEdge extends CyIdentifiable> void mergeAttribute(final Map<EdgeSpec, CyColumn> edgeColumnMap, final CyEdge targetEdge, final CyColumn targetColumn,
-			final CyNetwork network) {
-		if (edgeColumnMap == null) 	throw new IllegalArgumentException("edgeColumnMap cannot be null.");
-		if (targetEdge == null) 	throw new IllegalArgumentException("targetEdge cannot be null.");
-		if (targetColumn == null) 	throw new IllegalArgumentException("targetColumn cannot be null.");
-		if (network == null) 		throw new IllegalArgumentException("network cannot be null.");
+	private <CyEdge extends CyIdentifiable> void mergeAttribute(final Map<EdgeSpec, 
+	                                                            CyColumn> edgeColumnMap, 
+	                                                            final CyEdge targetEdge,
+	                                                            final CyColumn targetColumn,
+	                                                            final CyNetwork network) {
+		if (edgeColumnMap == null) throw new IllegalArgumentException("edgeColumnMap cannot be null.");
+		if (targetEdge == null) throw new IllegalArgumentException("targetEdge cannot be null.");
+		if (targetColumn == null) throw new IllegalArgumentException("targetColumn cannot be null.");
+		if (network == null) throw new IllegalArgumentException("network cannot be null.");
 
 		final CyRow cyRow = network.getRow(targetEdge);
 		final ColumnType colType = ColumnType.getType(targetColumn);
@@ -260,9 +291,7 @@ boolean verbose = false;
 	if (verbose)	
 		System.out.print("Merging: " + targetColumn.getName() + " [" + colType + "]");
 
-		
 		for (EdgeSpec from : edgeColumnMap.keySet()) {
-//			final CyEdge from = entryGOAttr.getKey();
 			final CyColumn fromColumn = edgeColumnMap.get(from);
 			final CyTable fromTable = fromColumn.getTable();
 			final CyRow fromCyRow = fromTable.getRow(from.edge.getSUID());
@@ -271,7 +300,7 @@ boolean verbose = false;
 			if (colType == ColumnType.STRING) {
 				String fromValue = "";
 				String o2 = "";
-				
+
 				try
 				{
 					fromValue = fromCyRow.get(fromColumn.getName(), String.class);
@@ -293,11 +322,11 @@ boolean verbose = false;
 				}
 			} else if (!colType.isList()) { // simple type (Integer, Long,
 											// Double, Boolean)
-				
+
 				String colName = fromColumn.getName();
 				var fColType = fromColType.getType();
 				Object o1 = fromCyRow.get(colName, fColType);
-				
+
 				if (fromColType != colType) {
 					o1 = colType.castService(o1);
 				}
@@ -351,11 +380,11 @@ boolean verbose = false;
 					final List<?> list = fromCyRow.getList(fromColumn.getName(), fromPlain.getType());
 					if(list == null)
 						continue;
-					
+
 					for (final Object listValue:list) {
 						if(listValue == null)
 							continue;
-						
+
 						final Object validValue;
 						if (plainType != fromColType) {
 							validValue = plainType.castService(listValue);

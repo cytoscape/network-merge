@@ -2,6 +2,7 @@ package org.cytoscape.network.merge.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,7 @@ public class NodeMerger {
 	private NodeListList matchList;
 	private List<NodeSpec> unmatchedList;
 	private final Map<CyNode, CyNode> nodeNodeMap = new HashMap<CyNode, CyNode>();		// original -> target
+	private final Map<Long, HashSet<Long>> nodeMatchMap = new HashMap<Long, HashSet<Long>>();
 	private AttributeMap nodeAttributeMap;
 	private CyNetwork targetNetwork;
 	private NetColumnMap matchingAttribute;
@@ -49,18 +51,26 @@ public class NodeMerger {
 	private CyColumn countColumn;
 	private CyColumn matchColumn;
 	private List<CyNetwork> networks;
+	protected boolean withinNetworkMerge = false;
+
 	public List<CyNetwork> getNetworkList() {		return networks;	}
-	
-	public NodeMerger(final AttributeConflictCollector conflictCollector, AttributeMap nodeAttributeMapping) {
+
+	public NodeMerger(final AttributeConflictCollector conflictCollector) {
 		this.conflictCollector = conflictCollector;
 	}
 	boolean verbose = false;
 
-	public void mergeNodes(List<CyNetwork> sources, CyNetwork targetNetwork, Operation operation, AttributeMap nodeAttribute, 
-			NetColumnMap matchingAttribute, AttributeValueMatcher attributeValueMatcher, CyColumn matchColumn, CyColumn countColumn) 
+	public void mergeNodes(List<CyNetwork> sources, 
+	                       CyNetwork targetNetwork, 
+	                       Operation operation, 
+	                       AttributeMap nodeAttribute, 
+	                       NetColumnMap matchingAttribute, 
+												 AttributeValueMatcher attributeValueMatcher, 
+												 CyColumn matchColumn, 
+												 CyColumn countColumn) 
 	{
 		if (verbose) System.out.println("C:  build the list of node list that will merge------------" );
-		
+
 		this.nodeAttributeMap = nodeAttribute;
 		this.matchingAttribute = matchingAttribute;
 		this.attributeValueMatcher = attributeValueMatcher;
@@ -71,17 +81,17 @@ public class NodeMerger {
 		matchList = new NodeListList();
 		unmatchedList = new ArrayList<NodeSpec>();
 
+		boolean first = false;
 		for (CyNetwork net : networks)		// build matchedList and unmatchedList
-			for (CyNode node : net.getNodeList())
-				match(new NodeSpec(net, node));
-//		if (verbose)
-//		{
-//			matchList.dump();
-//			System.out.println("Unmatched:");
-//			for (NodeSpec n : unmatchedList)
-//				System.out.println(n);
-//		}
-		
+			if (first && !withinNetworkMerge) {
+				first = false;
+				for (CyNode node : net.getNodeList())
+					unmatchedList.add(new NodeSpec(net, node));
+			} else {
+				for (CyNode node : net.getNodeList())
+					match(new NodeSpec(net, node));
+			}
+
 		if (verbose) System.out.println("D:  merge nodes in the matchedList ---------------------------" );
 		// if not ALL nets have a node in the match, remove from intersection
 		if (operation == Operation.INTERSECTION)
@@ -91,7 +101,7 @@ public class NodeMerger {
 				 if (nodes.size() < networks.size())	
 					matchList.remove(nodes);
 			}
-		
+
 		if (operation == Operation.UNION || operation == Operation.INTERSECTION)		// for Union OR Intersection, add the matches to our target
 		{
 			for (List<NodeSpec> nodes : matchList)
@@ -103,7 +113,7 @@ public class NodeMerger {
 			for (NodeSpec node : unmatchedList)
 				addNodeToTarget(node);
 		}
-		
+
 		if (operation == Operation.DIFFERENCE)			//for difference,  add ONLY nodes from first network that aren't matches
 		{
 			CyNetwork firstNet = networks.get(0);
@@ -115,11 +125,16 @@ public class NodeMerger {
 					addNodeToTarget(new NodeSpec(firstNet, node));
 			}
 		}	
-		
+
 		if (verbose) System.out.println("D:  NodeNodeMap has " + nodeNodeMap.size() + " has keys: " + nodeNodeMap.keySet());
 		if (verbose) System.out.println("mergedNetwork.size = " + targetNetwork.getNodeCount());
-			
+
 	}
+
+	protected void setWithinNetworkMerge(boolean within) {
+		withinNetworkMerge = within;
+	}
+
 	//----------------------------------------------------------------
 	public void addNodeToTarget(NodeSpec node)
 	{
@@ -173,7 +188,7 @@ public class NodeMerger {
 				if (targetColumn == null) continue;
 				if (attrName.equals(attribute))
 					mergeAttribute(nodeToColMap, targetNode, targetColumn, null, targetNetwork);
-				
+
 				final CyColumn colum = (table == null) ? null : table.getColumn(attrName);
 				for (NodeSpec node : matchedNodes)
 					nodeToColMap.put(node.getNode(), colum);
@@ -189,7 +204,7 @@ public class NodeMerger {
 //		if (Merge.verbose) System.out.println("Node Merged");
 	}	
 	private void match(final NodeSpec spec) {
-		
+
 		for (List<NodeSpec> matches : matchList) 
 		{
 			for (NodeSpec node : matches)
@@ -214,10 +229,20 @@ public class NodeMerger {
 		}
 		unmatchedList.add(spec);
 	}
-	
+
 	private boolean matchNode(NodeSpec a, NodeSpec b)
 	{
 		return matchNode(a.getNet(), a.getNode(), b.getNet(), b.getNode());
+	}
+
+	protected boolean matchNodeFast(final CyNode n1, final CyNode n2) {
+		Long n1SUID = n1.getSUID();
+		Long n2SUID = n2.getSUID();
+		if (n1SUID.equals(n2SUID)) return true;
+		if ((nodeMatchMap.containsKey(n1SUID) && nodeMatchMap.get(n1SUID).contains(n2SUID)) || 
+		    (nodeMatchMap.containsKey(n2SUID) && nodeMatchMap.get(n2SUID).contains(n1SUID)))
+			return true;
+		return false;
 	}
 
 	protected boolean matchNode(final CyNetwork net1, final CyNode n1, final CyNetwork net2, final CyNode n2) {
@@ -229,23 +254,34 @@ public class NodeMerger {
 
 		CyColumn col1 = matchingAttribute.get(net1);
 		CyColumn col2 = matchingAttribute.get(net2);
-		
+
 		if (col1 == null || col2 == null)
 			throw new IllegalArgumentException("Please specify the matching table column first");
-		
+
 		boolean result = attributeValueMatcher.matched(n1, col1, n2, col2);
 //		if (result && verbose)
 //			System.out.println((result? "MATCH " : "NOMATCH   ") + nodeName(net1, n1) + " " + net1.getSUID() + ": " + col1.getName() 
 //				+ ", "  + nodeName(net2, n2) + " " + net2.getSUID() + ": " + col2.getName());
+		if (result) {
+			// Save this match for later
+			Long n1SUID = n1.getSUID();
+			Long n2SUID = n2.getSUID();
+			if (!nodeMatchMap.containsKey(n1SUID))
+				nodeMatchMap.put(n1SUID, new HashSet<Long>());
+			if (!nodeMatchMap.containsKey(n2SUID))
+				nodeMatchMap.put(n2SUID, new HashSet<Long>());
+			nodeMatchMap.get(n1SUID).add(n2SUID);
+			nodeMatchMap.get(n2SUID).add(n1SUID);
+		}
 		return result; 
 	}
-	
+
 	//===============================================================================================
 
 
 	public void mergeAttribute(Map<CyNode, CyColumn> nodeColMap, CyNode node, CyColumn targetColumn, CyColumn countColumn, CyNetwork targetNet) 
 	{
-	
+
 //		if (Merge.verbose) System.out.println("mergeAttribute " + (node == null ? "NULLNODE" : node.getSUID()) + " " + (targetColumn == null ? "NULLTARGET" : targetColumn.getName()));
 		if (nodeColMap == null) 	return;
 		if (node == null) 			return;
@@ -262,9 +298,9 @@ public class NodeMerger {
 			merge(source, fromColumn, targetNet, node, targetColumn, countColumn);
 		}
 	}
-	
+
 	private void merge(CyNode from, CyColumn fromColumn, CyNetwork targetNet, CyNode target, CyColumn targetColumn, CyColumn countColumn) {
-		
+
 		if (from == null) 			return;
 		if (target == null) 		return;
 		if (from == fromColumn) 	return;
@@ -278,7 +314,7 @@ public class NodeMerger {
 
 		if (targetRow == null) throw new NullPointerException("targetRow");
 		if (fromCyRow == null) throw new NullPointerException("fromCyRow");
-		
+
 		if (fromColType == ColumnType.STRING) {
 			Class c = fromColType.getType().getClass();
 			String s = fromColumn.getName();
@@ -286,8 +322,8 @@ public class NodeMerger {
 			{
 				final String fromValue = fromCyRow.get(s, String.class);
 				final String o2 = targetRow.get(targetColumn.getName(), String.class);
-				
-				
+
+
 //				System.out.println("mergeAttribute: " + fromValue + " - " + o2);
 				if (o2 == null || o2.length() == 0)  // null or empty attribute
 				{
@@ -356,10 +392,10 @@ public class NodeMerger {
 				final ColumnType fromPlain = fromColType.toPlain();
 				final List<?> list = fromCyRow.getList(fromColumn.getName(), fromPlain.getType());
 				if(list == null)				return;
-				
+
 				for (final Object listValue:list) {
 					if(listValue == null)		continue;
-					
+
 					final Object validValue;
 					if (plainType != fromColType) 
 						validValue = plainType.castService(listValue);

@@ -88,7 +88,6 @@ private boolean asCommand;
 			final Operation operation, 
 			final boolean subtractOnlyUnconnectedNodes, 
 			final AttributeConflictCollector conflictCollector,
-//			final String tgtType,   //final Map<String, Map<String, Set<String>>> selectedNetworkAttributeIDType,
 			final boolean inNetworkMerge, 
 			final boolean asCommand, 
 			final CreateNetworkViewTaskFactory netViewCreator,
@@ -117,12 +116,15 @@ private boolean asCommand;
 		if(networkMerge != null)
 			this.networkMerge.interrupt();
 	}
-static boolean verbose = Merge.verbose;
+	static boolean verbose = Merge.verbose;
+
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
 	
 		taskMonitor.setProgress(0.0d);
 		taskMonitor.setTitle("Merging Networks");
+
+		long start = System.currentTimeMillis();
 
 		// Create new network (merged network)
 		taskMonitor.setStatusMessage("Creating new merged network...");
@@ -131,8 +133,8 @@ static boolean verbose = Merge.verbose;
 
 		
 		taskMonitor.setStatusMessage("Merging networks...");
-		final NodeMerger nodeMerger = new NodeMerger(conflictCollector, nodeAttributeMapping);
-		final EdgeMerger edgeMerger = new EdgeMerger(newNetwork, nodeMerger, conflictCollector, edgeAttributeMapping);
+		final NodeMerger nodeMerger = new NodeMerger(conflictCollector);
+		final EdgeMerger edgeMerger = new EdgeMerger(newNetwork, nodeMerger, conflictCollector);
 		final AttributeValueMatcher attributeValueMatcher = new DefaultAttributeValueMatcher();
 
 		networkMerge = new Merge(
@@ -157,6 +159,10 @@ static boolean verbose = Merge.verbose;
 			HandleConflictsTask hcTask = new HandleConflictsTask(conflictCollector);
 			insertTasksAfterCurrentTask(hcTask);
 		}
+
+		long delta = System.currentTimeMillis()-start;
+		System.out.println("network merge took "+delta+"ms");
+		
 
 		// Cancellation check...
 		if(cancelled) {
@@ -183,7 +189,6 @@ static boolean verbose = Merge.verbose;
 			vMapping.setCurrentVisualStyle(vizStyle);
 		}
 		insertTasksAfterCurrentTask(netViewCreator.createTaskIterator(networks));	
-		
 		taskMonitor.setProgress(1.0d);
 	}
 }

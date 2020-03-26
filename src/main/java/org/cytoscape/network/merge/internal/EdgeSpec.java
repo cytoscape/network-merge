@@ -21,6 +21,7 @@ public class EdgeSpec implements Comparable<EdgeSpec>
 	public CyNode getSource()	{ return edge.getSource();	}
 	public CyNode getTarget()	{ return edge.getTarget();	}
 	public boolean isDirected()	{ return edge.isDirected();	}
+	public String getInteraction() { return net.getRow(edge).get(CyEdge.INTERACTION, String.class); }
 	
 	public String toString()
 	{
