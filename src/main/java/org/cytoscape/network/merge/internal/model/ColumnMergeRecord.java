@@ -1,19 +1,22 @@
-package org.cytoscape.network.merge.internal.task;
+package org.cytoscape.network.merge.internal.model;
 
 import java.util.HashMap;
 import java.util.List;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.network.merge.internal.util.ColumnType;
-
+import org.cytoscape.network.merge.internal.task.NetworkMergeCommandTask;
+/*
+ * ColumnMergeRecord - a list of 
+ */
 //---------------------------------------------------------------------
 public class ColumnMergeRecord 
 {
-	HashMap<CyNetwork, String> columnNames = new HashMap<CyNetwork, String>();
+	public HashMap<CyNetwork, String> columnNames = new HashMap<CyNetwork, String>();
 	public String outName;
 	public ColumnType outType;
 	
-	ColumnMergeRecord(String str, List<CyNetwork> netw)
+	public ColumnMergeRecord(String str, List<CyNetwork> netw)
 	{
 		String[] names = str.split(",");
 		int size = names.length;
@@ -28,7 +31,7 @@ public class ColumnMergeRecord
 		
 	}
 	
-	void dump()
+	public void dump()
 	{
 		System.out.println(outName + " # " + outType.toString());
 		for (CyNetwork net : columnNames.keySet())

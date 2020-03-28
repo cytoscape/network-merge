@@ -36,7 +36,7 @@ import javax.swing.table.TableColumn;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyTable;
-import org.cytoscape.network.merge.internal.model.NetColumnMap;
+import org.cytoscape.network.merge.internal.model.MatchingAttribute;
 
 /**
  * Table for selecting which attribute to use for matching nodes 
@@ -44,10 +44,10 @@ import org.cytoscape.network.merge.internal.model.NetColumnMap;
 @SuppressWarnings("serial")
 class MatchNodeTable extends JTable {
 	
-    private final NetColumnMap matchingAttribute;
+    private final MatchingAttribute matchingAttribute;
     private final MatchNodeTableModel model;
 
-    public MatchNodeTable(final NetColumnMap matchingAttribute) {
+    public MatchNodeTable(final MatchingAttribute matchingAttribute) {
         this.matchingAttribute = matchingAttribute;
         model = new MatchNodeTableModel();
         setModel(model);
@@ -70,7 +70,7 @@ class MatchNodeTable extends JTable {
                     colNames.add(colName);
             }
             
-            CyColumn cyCol = matchingAttribute.get(net);
+            CyColumn cyCol = matchingAttribute.getAttributeForMatching(net);
             JComboBox<String> comboBox = new JComboBox<String>(colNames);
             
             if (cyCol!=null) {
@@ -97,12 +97,12 @@ class MatchNodeTable extends JTable {
 
         @Override
         public int getColumnCount() {
-            return matchingAttribute.size();
+            return matchingAttribute.getSizeNetwork();
         }
 
         @Override
         public int getRowCount() {
-            int n = matchingAttribute.size();
+            int n = matchingAttribute.getSizeNetwork();
 			return n == 0 ? 0 : 1;
         }
 
@@ -113,7 +113,7 @@ class MatchNodeTable extends JTable {
 
         @Override
         public Object getValueAt(int row, int col) {
-            return matchingAttribute.get(networks.get(col)).getName();
+            return matchingAttribute.getAttributeForMatching(networks.get(col)).getName();
         }
 
         @Override
@@ -133,7 +133,7 @@ class MatchNodeTable extends JTable {
                 CyTable table = net.getDefaultNodeTable();
                 CyColumn cyCol = table.getColumn((String)value);
                 if (cyCol!=null) {
-                    matchingAttribute.put(net, cyCol);
+                    matchingAttribute.putAttributeForMatching(net, cyCol);
                     fireTableDataChanged();
                 }
             }

@@ -33,10 +33,11 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 
-import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.AbstractListModel;
 import javax.swing.BorderFactory;
@@ -46,6 +47,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -72,14 +74,18 @@ import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.network.merge.internal.NetworkMerge.Operation;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollector;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollectorImpl;
-import org.cytoscape.network.merge.internal.model.AttributeMap;
-import org.cytoscape.network.merge.internal.model.NetColumnMap;
+import org.cytoscape.network.merge.internal.model.AttributeMapping;
+import org.cytoscape.network.merge.internal.model.AttributeMappingImpl;
+import org.cytoscape.network.merge.internal.model.MatchingAttribute;
+import org.cytoscape.network.merge.internal.model.MatchingAttributeImpl;
 import org.cytoscape.network.merge.internal.task.NetworkMergeTask;
+import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
 import org.cytoscape.util.swing.BasicCollapsiblePanel;
 import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.util.swing.LookAndFeelUtil;
+import org.cytoscape.work.swing.DialogTaskManager;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 
@@ -91,11 +97,10 @@ public class NetworkMergeDialog extends JDialog {
 	private static final long serialVersionUID = 1013626339762545400L;
 	
 	private final CyNetworkManager cnm;
-	private final CyNetworkFactory cnf;
 	private final CyNetworkNaming cnn;
+	private final CyServiceRegistrar serviceRegistrar;
 	private final TaskManager<?, ?> taskManager;
 	private final IconManager iconMgr;
-	private CreateNetworkViewTaskFactory netViewCreator;
 	
 	private JPanel operationPnl;
 	private ButtonGroup operationGroup;
@@ -127,38 +132,30 @@ public class NetworkMergeDialog extends JDialog {
 	private JButton okBtn;
 	
 	private final TreeMap<Operation, AbstractButton> operationButtons;
-//	private Map<String, Map<String, Set<String>>> selectedNetAttrIDType;
 	
-	private final AttributeMap nodeAttrMapping;
-	private final AttributeMap edgeAttrMapping;
-	private final NetColumnMap matchingAttr;
+	private final AttributeMapping nodeAttrMapping;
+	private final AttributeMapping edgeAttrMapping;
+	private final MatchingAttribute matchingAttr;
 //	boolean checkCyThesaurus;
 	
-	private String tgtType;
 	private Operation selectedOperation = Operation.UNION;
 	
 	/** Creates new form NetworkMergeDialog */
-	public NetworkMergeDialog(final CyNetworkManager cnm,
-							  final CyNetworkFactory cnf,
-							  final CyNetworkNaming cnn,
-							  final TaskManager<?, ?> taskManager,
-							  final IconManager iconMgr,
-							  final CreateNetworkViewTaskFactory netViewCreator) {
+	public NetworkMergeDialog(final CyServiceRegistrar serviceRegistrar) {
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-		this.cnm = cnm;
-		this.cnf = cnf;
-		this.cnn = cnn;
-		this.taskManager = taskManager;
-		this.iconMgr = iconMgr;
-		this.netViewCreator = netViewCreator;
+		this.serviceRegistrar = serviceRegistrar;
+		this.cnm = serviceRegistrar.getService(CyNetworkManager.class);
+		this.cnn = serviceRegistrar.getService(CyNetworkNaming.class);
+		this.taskManager = serviceRegistrar.getService(DialogTaskManager.class);
+		this.iconMgr = serviceRegistrar.getService(IconManager.class);
 
 //		checkCyThesaurus = checkCyThesaurus();
 		
 		operationButtons = new TreeMap<>();
-		matchingAttr = new NetColumnMap();
-		nodeAttrMapping = new AttributeMap();
-		edgeAttrMapping = new AttributeMap();
+		matchingAttr = new MatchingAttributeImpl();
+		nodeAttrMapping = new AttributeMappingImpl();
+		edgeAttrMapping = new AttributeMappingImpl();
 
 		initComponents();
 		updateOKButton();
@@ -825,13 +822,10 @@ public class NetworkMergeDialog extends JDialog {
 					final AttributeConflictCollector conflictCollector = new AttributeConflictCollectorImpl();
 
 					// Network merge task
-//					((AttributeMappingImpl) nodeAttrMapping).dump("create NetworkMergeTask");
-//					System.out.println("\n");
-//					((NetColumnMap) matchingAttr).dump("create NetworkMergeTask");
-					final NetworkMergeTask nmTask = new NetworkMergeTask(cnf, cnm, netName, matchingAttr,
+					final NetworkMergeTask nmTask = new NetworkMergeTask(serviceRegistrar, netName, matchingAttr,
 							nodeAttrMapping, edgeAttrMapping, selectedNetData.getNetworkList(),
-							getOperation(), getDifference1Btn().isSelected(), conflictCollector, //tgtType,   //, selectedNetAttrIDType
-							getInNetMergeCkb().isSelected(), false, netViewCreator);
+							getOperation(), getDifference1Btn().isSelected(), conflictCollector, 
+							getInNetMergeCkb().isSelected());
 
 					final TaskIterator ti = new TaskIterator(nmTask);
 
@@ -882,19 +876,19 @@ public class NetworkMergeDialog extends JDialog {
 	private void addRemoveAttributeMapping(CyNetwork network, boolean isAdd) {
 
 		if (isAdd) {
-//			nodeAttrMapping.addNetwork(network, network.getDefaultNodeTable()); // TODO:
+			nodeAttrMapping.addNetwork(network, network.getDefaultNodeTable()); // TODO:
 																						// make
 																						// the
 																						// table
 																						// an
 																						// user
 																						// option?
-//			edgeAttrMapping.addNetwork(network, network.getDefaultEdgeTable());
-//			matchingAttr.addNetwork(network);
+			edgeAttrMapping.addNetwork(network, network.getDefaultEdgeTable());
+			matchingAttr.addNetwork(network);
 		} else {
-//			nodeAttrMapping.removeNetwork(network);
-//			edgeAttrMapping.removeNetwork(network);
-//			matchingAttr.removeNetwork(network);
+			nodeAttrMapping.removeNetwork(network);
+			edgeAttrMapping.removeNetwork(network);
+			matchingAttr.removeNetwork(network);
 		}
 	}
 

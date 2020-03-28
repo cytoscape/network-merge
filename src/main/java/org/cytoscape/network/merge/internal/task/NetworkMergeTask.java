@@ -24,28 +24,34 @@ package org.cytoscape.network.merge.internal.task;
  * #L%
  */
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
-import org.cytoscape.network.merge.internal.EdgeMerger;
-import org.cytoscape.network.merge.internal.Merge;
+import org.cytoscape.network.merge.internal.AttributeBasedNetworkMerge;
 import org.cytoscape.network.merge.internal.NetworkMerge.Operation;
-import org.cytoscape.network.merge.internal.NodeMerger;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollector;
-import org.cytoscape.network.merge.internal.model.AttributeMap;
-import org.cytoscape.network.merge.internal.model.NetColumnMap;
+import org.cytoscape.network.merge.internal.model.AttributeMapping;
+import org.cytoscape.network.merge.internal.model.MatchingAttribute;
+import org.cytoscape.network.merge.internal.util.AttributeMerger;
 import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
+import org.cytoscape.network.merge.internal.util.DefaultAttributeMerger;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeValueMatcher;
+import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
+import org.cytoscape.util.json.CyJSONUtil;
 import org.cytoscape.work.AbstractTask;
+import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskMonitor;
+import org.cytoscape.work.json.JSONResult;
 
 
-public class NetworkMergeTask extends AbstractTask {	
+public class NetworkMergeTask extends AbstractTask implements ObservableTask {	
 	private final List<CyNetwork> selectedNetworkList;
 	private final Operation operation;
 	private final boolean subtractOnlyUnconnectedNodes;
@@ -53,51 +59,45 @@ public class NetworkMergeTask extends AbstractTask {
 
 	
 	final private CreateNetworkViewTaskFactory netViewCreator;
+	final private CyServiceRegistrar serviceRegistrar; 
 
-	private NetColumnMap matchingAttribute;
-	private AttributeMap nodeAttributeMapping;
-	private AttributeMap edgeAttributeMapping;
+	private final MatchingAttribute matchingAttribute;
+	private final AttributeMapping nodeAttributeMapping;
+	private final AttributeMapping edgeAttributeMapping;
 
 	private boolean inNetworkMerge;
 
 	private final CyNetworkFactory cnf;
 	private final CyNetworkManager networkManager;
 	private final String networkName;
+	private CyNetwork newNetwork;
 	
-	private Merge networkMerge;
-private boolean asCommand;
+	private AttributeBasedNetworkMerge networkMerge;
+
 	/**
 	 * Constructor.<br>
 	 * 
 	 */
-	public NetworkMergeTask(final CyNetworkFactory cnf, 
-			final CyNetworkManager networkManager,
-			final String networkName, 
-			final NetColumnMap matchingAttribute,
-			final AttributeMap nodeAttributeMapping, 
-			final AttributeMap edgeAttributeMapping,
-			final List<CyNetwork> selectedNetworkList, 
-			final Operation operation, 
-			final boolean subtractOnlyUnconnectedNodes, 
-			final AttributeConflictCollector conflictCollector,
-//			final String tgtType,   //final Map<String, Map<String, Set<String>>> selectedNetworkAttributeIDType,
-			final boolean inNetworkMerge, 
-			final boolean asCommand, 
-			final CreateNetworkViewTaskFactory netViewCreator) 
-	{
+	public NetworkMergeTask( final CyServiceRegistrar serviceRegistrar,
+			final String networkName, final MatchingAttribute matchingAttribute,
+			final AttributeMapping nodeAttributeMapping, final AttributeMapping edgeAttributeMapping,
+			final List<CyNetwork> selectedNetworkList, final Operation operation, 
+			final boolean subtractOnlyUnconnectedNodes, final AttributeConflictCollector conflictCollector,
+			final boolean inNetworkMerge) {
+		this.serviceRegistrar = serviceRegistrar;
 		this.selectedNetworkList = selectedNetworkList;
 		this.operation = operation;
 		this.subtractOnlyUnconnectedNodes = subtractOnlyUnconnectedNodes;
 		this.conflictCollector = conflictCollector;
-		this.netViewCreator = netViewCreator;
 		this.matchingAttribute = matchingAttribute;
 		this.inNetworkMerge = inNetworkMerge;
 		this.nodeAttributeMapping = nodeAttributeMapping;
 		this.edgeAttributeMapping = edgeAttributeMapping;
 		this.networkName = networkName;
-		this.cnf = cnf;
-		this.networkManager = networkManager;
-		this.asCommand = asCommand;
+
+		this.cnf = serviceRegistrar.getService(CyNetworkFactory.class);
+		this.networkManager = serviceRegistrar.getService(CyNetworkManager.class);
+		this.netViewCreator = serviceRegistrar.getService(CreateNetworkViewTaskFactory.class);
 	}
 
 	@Override
@@ -106,46 +106,35 @@ private boolean asCommand;
 		if(networkMerge != null)
 			this.networkMerge.interrupt();
 	}
-static boolean verbose = Merge.verbose;
+
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
-	
+
 		taskMonitor.setProgress(0.0d);
 		taskMonitor.setTitle("Merging Networks");
 
 		// Create new network (merged network)
 		taskMonitor.setStatusMessage("Creating new merged network...");
-		CyNetwork newNetwork = cnf.createNetwork();
+		newNetwork = cnf.createNetwork();
 		newNetwork.getRow(newNetwork).set(CyNetwork.NAME, networkName);
 
 		// Register merged network
 		networkManager.addNetwork(newNetwork);
 		
 		taskMonitor.setStatusMessage("Merging networks...");
-		final NodeMerger nodeMerger = new NodeMerger(conflictCollector);
-		final EdgeMerger edgeMerger = new EdgeMerger(conflictCollector);
 		final AttributeValueMatcher attributeValueMatcher = new DefaultAttributeValueMatcher();
+		final AttributeMerger attributeMerger = new DefaultAttributeMerger(conflictCollector);
 
-		networkMerge = new Merge(
-				matchingAttribute, 
-				nodeAttributeMapping, 
-				edgeAttributeMapping,
-				nodeMerger, 
-				edgeMerger, 
-				attributeValueMatcher, asCommand,
-				taskMonitor);
+		this.networkMerge = new AttributeBasedNetworkMerge(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping,
+				attributeMerger, attributeValueMatcher, taskMonitor);
 		networkMerge.setWithinNetworkMerge(inNetworkMerge);
-		if (verbose) 
-			System.err.println("new AttributeBasedNetworkMerge" );
 		
 		// Merge everything
 		networkMerge.mergeNetwork(newNetwork, selectedNetworkList, operation, subtractOnlyUnconnectedNodes);
 
-		if (verbose) 
-			System.err.println("mergeNetwork" );
 		taskMonitor.setStatusMessage("Processing conflicts...");
 		// Perform conflict handling if necessary
-		if (conflictCollector != null && !conflictCollector.isEmpty() && !cancelled) {
+		if (!conflictCollector.isEmpty() && !cancelled) {
 			HandleConflictsTask hcTask = new HandleConflictsTask(conflictCollector);
 			insertTasksAfterCurrentTask(hcTask);
 		}
@@ -168,4 +157,30 @@ static boolean verbose = Merge.verbose;
 		
 		taskMonitor.setProgress(1.0d);
 	}
+
+	@Override
+	public List<Class<?>> getResultClasses() { 
+		return Arrays.asList(String.class, CyNetwork.class, JSONResult.class);
+	}
+
+	@Override
+	public <R> R getResults(Class<? extends R> type) {
+    if (type.equals(CyNetwork.class)) {
+      return (R)newNetwork;
+    } else if (type.equals(String.class)){
+      if (newNetwork == null)
+        return (R)"<none>";
+      return (R)newNetwork.toString();
+    } else if (type.equals(JSONResult.class)) {
+      JSONResult res = () -> {if (newNetwork == null)
+        return "{}";
+      else {
+        CyJSONUtil cyJSONUtil = serviceRegistrar.getService(CyJSONUtil.class);
+        return cyJSONUtil.toJson(newNetwork);
+      }};
+      return (R)res;
+    }
+    return (R)newNetwork;
+	}
+
 }

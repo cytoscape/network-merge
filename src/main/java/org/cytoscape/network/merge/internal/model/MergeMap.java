@@ -1,17 +1,17 @@
-package org.cytoscape.network.merge.internal.task;
+package org.cytoscape.network.merge.internal.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.cytoscape.model.CyNetwork;
 
-class MergeMap 
+public class MergeMap 
 {
 	List<CyNetwork> sourceNetworks;
-	List<ColumnMergeRecord> columnsToMerge = new ArrayList<ColumnMergeRecord>();
+	public List<ColumnMergeRecord> columnsToMerge = new ArrayList<ColumnMergeRecord>();
 	boolean verbose = false;
 	
-	MergeMap(String s, List<CyNetwork> nets)
+	public MergeMap(String s, List<CyNetwork> nets)
 	{
 		if (s == null) 	{	if (verbose) System.out.println("no merge map defined"); return;		}
 		if (verbose) 	System.out.println("MergeMap: " + s + ", netsize= " + nets.size());

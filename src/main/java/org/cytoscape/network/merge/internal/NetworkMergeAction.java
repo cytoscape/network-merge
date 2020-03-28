@@ -25,21 +25,14 @@ package org.cytoscape.network.merge.internal;
  */
 
 import java.awt.Dialog;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.AbstractCyAction;
-import org.cytoscape.application.swing.ActionEnableSupport;
 import org.cytoscape.application.swing.CySwingApplication;
-import org.cytoscape.model.CyNetworkFactory;
-import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.network.merge.internal.ui.NetworkMergeDialog;
-import org.cytoscape.session.CyNetworkNaming;
-import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
-import org.cytoscape.util.swing.IconManager;
+import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.view.model.CyNetworkViewManager;
-import org.cytoscape.work.TaskManager;
 
 
 public class NetworkMergeAction extends AbstractCyAction {
@@ -49,29 +42,18 @@ public class NetworkMergeAction extends AbstractCyAction {
 	private static final String APP_MENU_TITLE ="Networks...";
 	private static final String PARENT_MENU ="Tools.Merge[2.0]";
 	
+	private final CyServiceRegistrar serviceRegistrar;
 	private final CySwingApplication swingApp;
-	private final CyNetworkManager cnm;
-	private final CyNetworkFactory cnf;
-	private final CyNetworkNaming cnn;
-	private final TaskManager taskManager;
-	private final IconManager iconMgr;
-	private final CreateNetworkViewTaskFactory netViewCreator;
 
-
-	public NetworkMergeAction(CySwingApplication swingApp, CyApplicationManager cam, CyNetworkManager cnm,
-			CyNetworkViewManager cnvm, CyNetworkFactory cnf, CyNetworkNaming cnn, TaskManager taskManager,
-			IconManager iconMgr, CreateNetworkViewTaskFactory netViewCreator) {
-		super(APP_MENU_TITLE, cam, ActionEnableSupport.ENABLE_FOR_ALWAYS, cnvm);
+	public NetworkMergeAction(CyServiceRegistrar registrar) {
+		super(APP_MENU_TITLE, registrar.getService(CyApplicationManager.class), 
+		      "network", registrar.getService(CyNetworkViewManager.class));
 		setPreferredMenu(PARENT_MENU);
 		setMenuGravity((float)0.0);
+
+		serviceRegistrar = registrar;
+		swingApp = registrar.getService(CySwingApplication.class);
 		
-		this.swingApp = swingApp;
-		this.cnm = cnm;
-		this.cnf = cnf;
-		this.cnn = cnn;
-		this.taskManager = taskManager;
-		this.iconMgr = iconMgr;
-		this.netViewCreator = netViewCreator;
 	}
 
 	/**
@@ -80,11 +62,8 @@ public class NetworkMergeAction extends AbstractCyAction {
 	@Override
 	public void actionPerformed(final ActionEvent ae) {
 
-		final NetworkMergeDialog dialog = new NetworkMergeDialog(cnm, cnf, cnn, taskManager, iconMgr, netViewCreator);
+		final NetworkMergeDialog dialog = new NetworkMergeDialog(serviceRegistrar);
 		dialog.setLocationRelativeTo(swingApp.getJFrame());
-Point pt = dialog.getLocationOnScreen();
-pt.y -= 50;
-dialog.setLocation(pt);
 		dialog.setModalityType(Dialog.DEFAULT_MODALITY_TYPE);
 		dialog.setVisible(true);
 	}
