@@ -33,6 +33,7 @@ import org.cytoscape.work.ServiceProperties;
 import org.cytoscape.work.TaskFactory;
 import org.osgi.framework.BundleContext;
 
+import org.cytoscape.network.merge.internal.task.NetworkMergeTaskFactory;
 import org.cytoscape.network.merge.internal.task.NetworkMergeCommandTaskFactory;
 
 import static org.cytoscape.work.ServiceProperties.COMMAND;
@@ -41,6 +42,9 @@ import static org.cytoscape.work.ServiceProperties.COMMAND_EXAMPLE_JSON;
 import static org.cytoscape.work.ServiceProperties.COMMAND_LONG_DESCRIPTION;
 import static org.cytoscape.work.ServiceProperties.COMMAND_NAMESPACE;
 import static org.cytoscape.work.ServiceProperties.COMMAND_SUPPORTS_JSON;
+import static org.cytoscape.work.ServiceProperties.IN_MENU_BAR;
+import static org.cytoscape.work.ServiceProperties.PREFERRED_MENU;
+import static org.cytoscape.work.ServiceProperties.TITLE;
 
 
 public class CyActivator extends AbstractCyActivator {
@@ -55,11 +59,13 @@ public class CyActivator extends AbstractCyActivator {
 		CyServiceRegistrar serviceRegistrar = getService(bc, CyServiceRegistrar.class);
 
 		{
-			NetworkMergeAction networkMergeAction = new NetworkMergeAction(serviceRegistrar);
+			NetworkMergeTaskFactory mergeTask = new NetworkMergeTaskFactory(serviceRegistrar);
 
 			final Properties props = new Properties();
-			props.setProperty(ServiceProperties.ID, "networkMergeAction");
-			registerService(bc, networkMergeAction, CyAction.class, props); 
+			props.setProperty(TITLE, "Networks...");
+			props.setProperty(PREFERRED_MENU, "Tools.Merge[2.0]");
+			props.setProperty(IN_MENU_BAR, "true");
+			registerService(bc, mergeTask, TaskFactory.class, props); 
 		}
 
 		{
