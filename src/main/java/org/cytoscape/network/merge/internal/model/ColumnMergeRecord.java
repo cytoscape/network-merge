@@ -26,9 +26,6 @@ public class ColumnMergeRecord
 			columnNames.put(netw.get(i), names[i]);
 		outName = names[size-2];
 		outType = ColumnType.STRING;
-		
-		System.out.println();
-		
 	}
 	
 	public void dump()

@@ -176,6 +176,8 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 			CyColumn attr_merged = newNetwork.getRow(toEntry).getTable()
 					.getColumn(attributeMapping.getMergedAttribute(i));
 
+			// System.out.println("Merged attribute ("+i+") is: "+attr_merged.getName());
+
 			// merge
 			Map<T, CyColumn> mapGOAttr = new HashMap<T, CyColumn>();
 			final Iterator<Map.Entry<CyNetwork, Set<T>>> itEntryNetGOs = mapNetGOs.entrySet().iterator();
@@ -184,6 +186,7 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 				final CyNetwork net = entryNetGOs.getKey();
 				final String attrName = attributeMapping.getOriginalAttribute(net, i);
 				final CyTable table = attributeMapping.getCyTable(net);
+				// System.out.println("....from attribute "+net+":"+attrName);
 				if (attrName != null) {
 					final Iterator<T> itGO = entryNetGOs.getValue().iterator();
 					while (itGO.hasNext()) {

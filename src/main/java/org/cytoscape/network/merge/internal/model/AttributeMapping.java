@@ -67,6 +67,13 @@ public interface AttributeMapping {
     public String getMergedAttribute(int index);
 
     /**
+     *
+     * @param attribute
+     * @return the index for the merged attribute
+     */
+    public int getMergedAttributeIndex(String attribute);
+
+    /**
      * Set the ith attribute name in the merged network
      * @param index
      * @param attributeName

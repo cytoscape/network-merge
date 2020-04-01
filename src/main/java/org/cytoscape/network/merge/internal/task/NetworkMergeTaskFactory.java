@@ -1,6 +1,7 @@
 package org.cytoscape.network.merge.internal.task;
 
 import java.awt.Dialog;
+import javax.swing.SwingUtilities;
 
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyNetworkManager;
@@ -43,10 +44,13 @@ public class NetworkMergeTaskFactory implements TaskFactory {
 		}
 
 		public void run(TaskMonitor monitor) {
-			final NetworkMergeDialog dialog = new NetworkMergeDialog(registrar);
-			dialog.setLocationRelativeTo(swingApp.getJFrame());
-			dialog.setModalityType(Dialog.DEFAULT_MODALITY_TYPE);
-			dialog.setVisible(true);
+			SwingUtilities.invokeLater(() -> 
+			{
+				final NetworkMergeDialog dialog = new NetworkMergeDialog(registrar);
+				dialog.setLocationRelativeTo(swingApp.getJFrame());
+				dialog.setModalityType(Dialog.DEFAULT_MODALITY_TYPE);
+				dialog.setVisible(true);
+			});
 		}
 	}
 }
