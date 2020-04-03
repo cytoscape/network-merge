@@ -24,8 +24,10 @@ package org.cytoscape.network.merge.internal;
  * #L%
  */
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,6 +55,7 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	private final MatchingAttribute matchingAttribute;
 	private final AttributeMapping nodeAttributeMapping;
 	private final AttributeMapping edgeAttributeMapping;
+	private final AttributeMapping networkAttributeMapping;
 	private final AttributeValueMatcher attributeValueMatcher;
 	private final AttributeMerger attributeMerger;
 
@@ -65,9 +68,10 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	 */
 	public AttributeBasedNetworkMerge(final MatchingAttribute matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, final AttributeMapping edgeAttributeMapping,
+			final AttributeMapping networkAttributeMapping, 
 			final AttributeMerger attributeMerger, final TaskMonitor taskMonitor) {
-		this(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping, attributeMerger,
-				new DefaultAttributeValueMatcher(), taskMonitor);
+		this(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping, networkAttributeMapping,
+		     attributeMerger, new DefaultAttributeValueMatcher(), taskMonitor);
 	}
 
 	/**
@@ -80,6 +84,7 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	 */
 	public AttributeBasedNetworkMerge(final MatchingAttribute matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, final AttributeMapping edgeAttributeMapping,
+			final AttributeMapping networkAttributeMapping, 
 			final AttributeMerger attributeMerger, AttributeValueMatcher attributeValueMatcher,
 			final TaskMonitor taskMonitor) {
 		super(taskMonitor);
@@ -91,6 +96,7 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 		this.matchingAttribute = matchingAttribute;
 		this.nodeAttributeMapping = nodeAttributeMapping;
 		this.edgeAttributeMapping = edgeAttributeMapping;
+		this.networkAttributeMapping = networkAttributeMapping;
 		this.attributeMerger = attributeMerger;
 		this.attributeValueMatcher = attributeValueMatcher;
 	}
@@ -117,6 +123,7 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	protected void proprocess(CyNetwork toNetwork) {
 		setAttributeTypes(toNetwork.getDefaultNodeTable(), nodeAttributeMapping);
 		setAttributeTypes(toNetwork.getDefaultEdgeTable(), edgeAttributeMapping);
+		setAttributeTypes(toNetwork.getDefaultNetworkTable(), networkAttributeMapping);
 	}
 
 	private void setAttributeTypes(final CyTable table, AttributeMapping attributeMapping) {
@@ -136,6 +143,18 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 				table.createColumn(attr, type.getType(), isImmutable);
 			}
 		}
+	}
+
+	@Override
+	protected void mergeNetworks(final List<CyNetwork> nets, CyNetwork newNetwork) {
+		if (networkAttributeMapping == null) return;
+		Map<CyNetwork,Set<CyNetwork>> mapNetNet = new HashMap<>();
+		for (CyNetwork net: nets) {
+			mapNetNet.put(net, Collections.singleton(net));
+		}
+
+		setAttribute(newNetwork, newNetwork, mapNetNet, networkAttributeMapping);
+		
 	}
 
 	@Override
@@ -197,10 +216,9 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 			}
 
 			try {
-				// TODO how to handle network?
 				attributeMerger.mergeAttribute(mapGOAttr, toEntry, attr_merged, newNetwork);
 			} catch (Exception e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 				continue;
 			}
 		}

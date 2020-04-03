@@ -122,9 +122,11 @@ public class NetworkMergeDialog extends JDialog {
 	private JTabbedPane mergeAttrTp;
 	private JPanel mergeNodeAttrPnl;
 	private JPanel mergeEdgeAttrPnl;
+	private JPanel mergeNetAttrPnl;
 	private MatchNodeTable matchNodeTbl;
 	private MergeAttributeTable mergeNodeAttrTbl;
 	private MergeAttributeTable mergeEdgeAttrTbl;
+	private MergeAttributeTable mergeNetAttrTbl;
 	private JCheckBox idMappingCkb;
 	private JCheckBox inNetMergeCkb;
 	private JPanel buttonPnl;
@@ -135,6 +137,7 @@ public class NetworkMergeDialog extends JDialog {
 	
 	private final AttributeMapping nodeAttrMapping;
 	private final AttributeMapping edgeAttrMapping;
+	private final AttributeMapping netAttrMapping;
 	private final MatchingAttribute matchingAttr;
 //	boolean checkCyThesaurus;
 	
@@ -156,6 +159,7 @@ public class NetworkMergeDialog extends JDialog {
 		matchingAttr = new MatchingAttributeImpl();
 		nodeAttrMapping = new AttributeMappingImpl();
 		edgeAttrMapping = new AttributeMappingImpl();
+		netAttrMapping = new AttributeMappingImpl();
 
 		initComponents();
 		updateOKButton();
@@ -732,6 +736,14 @@ public class NetworkMergeDialog extends JDialog {
 		
 		return mergeEdgeAttrTbl;
 	}
+
+	private MergeAttributeTable getMergeNetAttrTbl() {
+		if (mergeNetAttrTbl == null) {
+			mergeNetAttrTbl = new MergeAttributeTable(netAttrMapping);
+		}
+		
+		return mergeNetAttrTbl;
+	}
 	
 	private JCheckBox getIdMappingCkb() {
 		if (idMappingCkb == null) {
@@ -751,6 +763,7 @@ public class NetworkMergeDialog extends JDialog {
 			
 			mergeAttrTp.addTab("Node", getMergeNodeAttrPnl());
 			mergeAttrTp.addTab("Edge", getMergeEdgeAttrPnl());
+			mergeAttrTp.addTab("Network", getMergeNetAttrPnl());
 		}
 		
 		return mergeAttrTp;
@@ -782,6 +795,20 @@ public class NetworkMergeDialog extends JDialog {
 		}
 		
 		return mergeEdgeAttrPnl;
+	}
+	
+	private JPanel getMergeNetAttrPnl() {
+		if (mergeNetAttrPnl == null) {
+			mergeNetAttrPnl = new JPanel();
+			mergeNetAttrPnl.setLayout(new BoxLayout(mergeNetAttrPnl, BoxLayout.LINE_AXIS));
+			
+			final JScrollPane mergeNetAttributeScrollPane = new JScrollPane();
+			mergeNetAttributeScrollPane.setViewportView(getMergeNetAttrTbl());
+			
+			mergeNetAttrPnl.add(mergeNetAttributeScrollPane);
+		}
+		
+		return mergeNetAttrPnl;
 	}
 	
 	private JCheckBox getInNetMergeCkb() {
@@ -823,7 +850,7 @@ public class NetworkMergeDialog extends JDialog {
 
 					// Network merge task
 					final NetworkMergeTask nmTask = new NetworkMergeTask(serviceRegistrar, netName, matchingAttr,
-							nodeAttrMapping, edgeAttrMapping, selectedNetData.getNetworkList(),
+							nodeAttrMapping, edgeAttrMapping, netAttrMapping, selectedNetData.getNetworkList(),
 							getOperation(), getDifference1Btn().isSelected(), conflictCollector, 
 							getInNetMergeCkb().isSelected());
 
@@ -884,10 +911,12 @@ public class NetworkMergeDialog extends JDialog {
 																						// user
 																						// option?
 			edgeAttrMapping.addNetwork(network, network.getDefaultEdgeTable());
+			netAttrMapping.addNetwork(network, network.getDefaultNetworkTable());
 			matchingAttr.addNetwork(network);
 		} else {
 			nodeAttrMapping.removeNetwork(network);
 			edgeAttrMapping.removeNetwork(network);
+			netAttrMapping.removeNetwork(network);
 			matchingAttr.removeNetwork(network);
 		}
 	}
@@ -925,6 +954,7 @@ public class NetworkMergeDialog extends JDialog {
 	private void updateMergeAttributeTable() {
 		getMergeNodeAttrTbl().fireTableStructureChanged();
 		getMergeEdgeAttrTbl().fireTableStructureChanged();
+		getMergeNetAttrTbl().fireTableStructureChanged();
 	}
 
 	/*

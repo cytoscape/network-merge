@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.cytoscape.event.CyEventHelper;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -43,6 +44,8 @@ import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeMerger;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeValueMatcher;
 import org.cytoscape.service.util.CyServiceRegistrar;
+import org.cytoscape.session.CySessionManager;
+import org.cytoscape.session.events.SessionAboutToBeSavedEvent;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
 import org.cytoscape.util.json.CyJSONUtil;
 import org.cytoscape.work.AbstractTask;
@@ -64,11 +67,14 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 	private final MatchingAttribute matchingAttribute;
 	private final AttributeMapping nodeAttributeMapping;
 	private final AttributeMapping edgeAttributeMapping;
+	private final AttributeMapping networkAttributeMapping;
 
 	private boolean inNetworkMerge;
 
 	private final CyNetworkFactory cnf;
 	private final CyNetworkManager networkManager;
+	private final CySessionManager sessionManager;
+	private final CyEventHelper eventHelper;
 	private final String networkName;
 	private CyNetwork newNetwork;
 	
@@ -81,6 +87,7 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 	public NetworkMergeTask( final CyServiceRegistrar serviceRegistrar,
 			final String networkName, final MatchingAttribute matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, final AttributeMapping edgeAttributeMapping,
+			final AttributeMapping networkAttributeMapping, 
 			final List<CyNetwork> selectedNetworkList, final Operation operation, 
 			final boolean subtractOnlyUnconnectedNodes, final AttributeConflictCollector conflictCollector,
 			final boolean inNetworkMerge) {
@@ -93,11 +100,14 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		this.inNetworkMerge = inNetworkMerge;
 		this.nodeAttributeMapping = nodeAttributeMapping;
 		this.edgeAttributeMapping = edgeAttributeMapping;
+		this.networkAttributeMapping = networkAttributeMapping;
 		this.networkName = networkName;
 
 		this.cnf = serviceRegistrar.getService(CyNetworkFactory.class);
 		this.networkManager = serviceRegistrar.getService(CyNetworkManager.class);
 		this.netViewCreator = serviceRegistrar.getService(CreateNetworkViewTaskFactory.class);
+		this.eventHelper = serviceRegistrar.getService(CyEventHelper.class);
+		this.sessionManager = serviceRegistrar.getService(CySessionManager.class);
 	}
 
 	@Override
@@ -113,6 +123,10 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		taskMonitor.setProgress(0.0d);
 		taskMonitor.setTitle("Merging Networks");
 
+		// Before we go too far, kick all of the networks we're going to merge to get them to 
+		// update their annotations
+		eventHelper.fireEvent(new SessionAboutToBeSavedEvent(sessionManager));
+
 		// Create new network (merged network)
 		taskMonitor.setStatusMessage("Creating new merged network...");
 		newNetwork = cnf.createNetwork();
@@ -126,7 +140,7 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		final AttributeMerger attributeMerger = new DefaultAttributeMerger(conflictCollector);
 
 		this.networkMerge = new AttributeBasedNetworkMerge(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping,
-				attributeMerger, attributeValueMatcher, taskMonitor);
+		    networkAttributeMapping, attributeMerger, attributeValueMatcher, taskMonitor);
 		networkMerge.setWithinNetworkMerge(inNetworkMerge);
 		
 		// Merge everything

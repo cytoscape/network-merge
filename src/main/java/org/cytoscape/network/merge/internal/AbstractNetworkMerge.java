@@ -39,6 +39,7 @@ import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyRow;
+import org.cytoscape.network.merge.internal.model.AttributeMapping;
 import org.cytoscape.work.TaskMonitor;
 
 /**
@@ -101,6 +102,16 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 	 *            merge data to this new node
 	 */
 	protected abstract void mergeNode(Map<CyNetwork, Set<CyNode>> mapNetNode, CyNode newNode, CyNetwork newNetwork);
+
+	/**
+	 * Merge (matched) nodes into one
+	 * 
+	 * @param networks
+	 *            the list of networks
+	 * @param newNetwork
+	 *            merge data to this new networkd
+	 */
+	protected abstract void mergeNetworks(List<CyNetwork> networks, CyNetwork newNetwork);
 
 	/**
 	 * Merge (matched) nodes into one. This method will be refactored in
@@ -297,12 +308,8 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 			CyNode node = mergedNetwork.addNode();
 			mergeNode(mapNetNode, node, mergedNetwork);
 
-			final Iterator<Set<CyNode>> itNodes = mapNetNode.values().iterator();
-			while (itNodes.hasNext()) {
-				final Set<CyNode> nodes_ori = itNodes.next();
-				final Iterator<CyNode> itNode = nodes_ori.iterator();
-				while (itNode.hasNext()) {
-					final CyNode node_ori = itNode.next();
+			for (Set<CyNode> nodes_ori: mapNetNode.values()) {
+				for (CyNode node_ori: nodes_ori) {
 					mapNN.put(node_ori, node);
 				}
 			}
@@ -376,6 +383,10 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 			CyEdge edge = mergedNetwork.addEdge(source, target, directed);
 			mergeEdge(mapNetEdge, edge, mergedNetwork);
 		}
+
+		// Last step -- merge the network attributes
+		mergeNetworks(fromNetworks, mergedNetwork);
+		//
 		//System.out.println("Run time: " + (System.currentTimeMillis() - startTime));
 
 		return mergedNetwork;
@@ -429,19 +440,13 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 					int j = 0;
 					for (; j < n; j++) {
 						final Map<CyNetwork, Set<T>> matchedGO = matchedList.get(j);
-						final Iterator<CyNetwork> itNet = matchedGO.keySet().iterator();
-						while (itNet.hasNext()) {
-							final CyNetwork net2 = itNet.next();
+						for (CyNetwork net2: matchedGO.keySet()) {
 							// if (net1==net2) continue; // assume the same network
 							// don't have nodes match to each other
 							if (!withinNetworkMerge && net1 == net2)
 								continue;
 	
-							final Set<T> gos2 = matchedGO.get(net2);
-							if (gos2 != null) 
-							{
-								CyIdentifiable go2 = gos2.iterator().next();
-								
+							for (CyIdentifiable go2: matchedGO.get(net2)) {
 								matched = matchNode(net1, (CyNode) go1, net2, (CyNode) go2);
 								
 								if (matched) {

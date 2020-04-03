@@ -43,6 +43,7 @@ import static org.cytoscape.work.ServiceProperties.COMMAND_LONG_DESCRIPTION;
 import static org.cytoscape.work.ServiceProperties.COMMAND_NAMESPACE;
 import static org.cytoscape.work.ServiceProperties.COMMAND_SUPPORTS_JSON;
 import static org.cytoscape.work.ServiceProperties.IN_MENU_BAR;
+import static org.cytoscape.work.ServiceProperties.MENU_GRAVITY;
 import static org.cytoscape.work.ServiceProperties.PREFERRED_MENU;
 import static org.cytoscape.work.ServiceProperties.TITLE;
 
@@ -63,8 +64,9 @@ public class CyActivator extends AbstractCyActivator {
 
 			final Properties props = new Properties();
 			props.setProperty(TITLE, "Networks...");
-			props.setProperty(PREFERRED_MENU, "Tools.Merge[2.0]");
+			props.setProperty(PREFERRED_MENU, "Tools.Merge");
 			props.setProperty(IN_MENU_BAR, "true");
+			props.setProperty(MENU_GRAVITY, "0.1");
 			registerService(bc, mergeTask, TaskFactory.class, props); 
 		}
 

@@ -450,17 +450,8 @@ public class AttributeMappingImpl implements AttributeMapping {
 
 
             for (int i=0; i<nAttr; i++) {
-//                //TODO REMOVE IN Cytoscape3.0
-//                if (attributeNames.get(i).compareTo(CyNetwork.NAME)==0) {
-//                    continue;
-//                }//TODO REMOVE IN Cytoscape3.0
-
                 addNewAttribute(net, attributeNames.get(i));
             }
-
-//            //TODO REMOVE IN 3.0, canonicalName in each network form a separate attribute in resulting network
-//            addNewAttribute(netID, CyNetwork.NAME);//TODO REMOVE IN Cytoscape3.0
-
 
         } else { // for each attributes to be added, search if the same attribute exists
                  // if yes, add to that group; otherwise create a new one
@@ -480,20 +471,12 @@ public class AttributeMappingImpl implements AttributeMapping {
 
             for (int i=0; i<nAttr; i++) {
                 final String at = attributeNames.get(i);
-
-//                //TODO REMOVE IN Cytoscape3.0, canonicalName in each network form a separate attribute in resulting network
-//                if (at.compareTo(CyNetwork.NAME)==0) {
-//                    addNewAttribute(netID, CyNetwork.NAME);
-//                    continue;
-//                }//TODO REMOVE IN Cytoscape3.0
-
                 boolean found = false;             
                 for (int ir=0; ir<nr; ir++) {
                     if (attrs.get(ir).compareTo(nullAttr)!=0) continue; // if the row is occupied
                     if (mergedAttributes.get(ir).compareTo(at)==0) { // same name as the merged attribute
                         found = true;
                         this.setOriginalAttribute(net, at, ir);
-                        //attrs.set(ir, at);// add the attribute on the ir row
                         break; 
                     }
 
@@ -502,21 +485,16 @@ public class AttributeMappingImpl implements AttributeMapping {
                         final CyNetwork net_curr = it.next();
                         final String attr_curr = attributeMapping.get(net_curr).get(ir);
                         if (attr_curr.compareTo(at)==0) { // same name as the original attribute
-                            //if (AttributeValueCastUtils.isAttributeTypeSame(attr_curr,at,attributes)) // not neccessay in Cytoscape2.6
-                                                                                                       // since attributes are global
                             found = true;
-                            //attrs.set(ir, at); // add the attribute on the ir row
                             this.setOriginalAttribute(net, at, ir);
                             break; 
                         }
                     }
-
-                    //if (found) break; // do not need to break, add to multiple line if match
                 }
 
                 if (!found) { //no same attribute found
                     addNewAttribute(net,at);
-                }                 
+                }
             }
         }
     }

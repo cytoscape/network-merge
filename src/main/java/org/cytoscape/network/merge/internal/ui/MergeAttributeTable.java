@@ -335,7 +335,8 @@ class MergeAttributeTable extends JTable {
 		// @Override
 		public int getRowCount() {
 			int n = attributeMapping.getSizeMergedAttributes() + 1; // +1: add an empty row in the end
-			return attributeMapping.getSizeNetwork() == 0 ? 0 : n;
+			int count = attributeMapping.getSizeNetwork() == 0 ? 0 : n;
+			return count;
 		}
 
 		@Override

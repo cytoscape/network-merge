@@ -23,7 +23,6 @@ import org.cytoscape.network.merge.internal.model.AttributeMappingImpl;
 import org.cytoscape.network.merge.internal.model.ColumnMergeRecord;
 import org.cytoscape.network.merge.internal.model.MatchingAttribute;
 import org.cytoscape.network.merge.internal.model.MatchingAttributeImpl;
-import org.cytoscape.network.merge.internal.model.MergeMap;
 import org.cytoscape.network.merge.internal.util.ParseUtils;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CyNetworkNaming;
@@ -100,6 +99,13 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 	public  String edgeMergeMap;
 
 	@Tunable(
+			description = "Network Merge Map", context= Tunable.NOGUI_CONTEXT,
+			longDescription="A list of column merge records, each containing a list of column names from the network table corresponding to the network list of the form {column1, column2, merged column, type}", 
+			exampleStringValue = "{_Annotations, _Annotations, _Annotations, List},{name, name, name, String}"
+	)
+	public  String networkMergeMap;
+
+	@Tunable(
 				description = "Nodes only", context= Tunable.NOGUI_CONTEXT,
 				longDescription="If true, this will merge the node tables and dismiss edges.", 
 				exampleStringValue = "false"
@@ -158,6 +164,7 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		MatchingAttribute matchingAttribute = 	buildMatchingAttribute(networkList);
 		AttributeMapping nodeAttributeMapping = buildNodeAttributeMapping(networkList, nodeMergeMap);
 		AttributeMapping edgeAttributeMapping = buildEdgeAttributeMapping(networkList, edgeMergeMap);
+		AttributeMapping networkAttributeMapping = buildNetworkAttributeMapping(networkList, networkMergeMap);
 
 		NetworkMerge.Operation op = Operation.UNION;
 		if (operation.getSelectedValue().equals("union"))
@@ -174,9 +181,9 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		boolean useDiference = op == Operation.DIFFERENCE; //TODO getDifference1Btn().isSelected();
 		final AttributeConflictCollector conflictCollector = new AttributeConflictCollectorImpl();
 
-		nmTask = new NetworkMergeTask(registrar, netName, 
-				matchingAttribute,	nodeAttributeMapping, edgeAttributeMapping, networkList, 
-				op, useDiference, conflictCollector, inNetworkMerge);	
+		nmTask = new NetworkMergeTask(registrar, netName,
+				matchingAttribute,	nodeAttributeMapping, edgeAttributeMapping, networkAttributeMapping,
+				networkList, op, useDiference, conflictCollector, inNetworkMerge);
 
 		TaskManager<?,?> tm = registrar.getService(SynchronousTaskManager.class);
 		tm.execute(new TaskIterator(nmTask));
@@ -303,12 +310,24 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 	}
 
 	//---------------------------------------------------------------------
+	private AttributeMapping buildNetworkAttributeMapping(List<CyNetwork> networkList, String mergeString) {
+		AttributeMapping networkAttributeMapping = new AttributeMappingImpl();
+		for (CyNetwork net : networkList)
+		{
+			CyTable netTable = net.getDefaultNetworkTable();
+			networkAttributeMapping.addNetwork(net, netTable);
+		}
+
+		return buildAttributeMapping(networkAttributeMapping, networkList, mergeString);
+	}
+
+	//---------------------------------------------------------------------
 	private AttributeMapping buildEdgeAttributeMapping(List<CyNetwork> networkList, String mergeString) {
 		AttributeMapping edgeAttributeMapping = new AttributeMappingImpl();
 		for (CyNetwork net : networkList)
 		{
-			CyTable nodeTable = net.getDefaultEdgeTable();
-			edgeAttributeMapping.addNetwork(net, nodeTable);
+			CyTable edgeTable = net.getDefaultEdgeTable();
+			edgeAttributeMapping.addNetwork(net, edgeTable);
 		}
 
 		return buildAttributeMapping(edgeAttributeMapping, networkList, mergeString);
