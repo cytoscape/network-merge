@@ -104,12 +104,12 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 	protected abstract void mergeNode(Map<CyNetwork, Set<CyNode>> mapNetNode, CyNode newNode, CyNetwork newNetwork);
 
 	/**
-	 * Merge (matched) nodes into one
+	 * Merge (matched) networks into one
 	 * 
 	 * @param networks
 	 *            the list of networks
 	 * @param newNetwork
-	 *            merge data to this new networkd
+	 *            merge data to this new network
 	 */
 	protected abstract void mergeNetworks(List<CyNetwork> networks, CyNetwork newNetwork);
 

@@ -24,13 +24,14 @@ package org.cytoscape.network.merge.internal.task;
  * #L%
  */
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.cytoscape.event.CyEventHelper;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -44,10 +45,12 @@ import org.cytoscape.network.merge.internal.util.AttributeValueMatcher;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeMerger;
 import org.cytoscape.network.merge.internal.util.DefaultAttributeValueMatcher;
 import org.cytoscape.service.util.CyServiceRegistrar;
-import org.cytoscape.session.CySessionManager;
-import org.cytoscape.session.events.SessionAboutToBeSavedEvent;
 import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
 import org.cytoscape.util.json.CyJSONUtil;
+import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.presentation.annotations.Annotation;
+import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskMonitor;
@@ -73,8 +76,8 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 
 	private final CyNetworkFactory cnf;
 	private final CyNetworkManager networkManager;
-	private final CySessionManager sessionManager;
-	private final CyEventHelper eventHelper;
+	private final CyNetworkViewManager viewManager;
+	private final AnnotationManager annotationManager;
 	private final String networkName;
 	private CyNetwork newNetwork;
 	
@@ -106,8 +109,8 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		this.cnf = serviceRegistrar.getService(CyNetworkFactory.class);
 		this.networkManager = serviceRegistrar.getService(CyNetworkManager.class);
 		this.netViewCreator = serviceRegistrar.getService(CreateNetworkViewTaskFactory.class);
-		this.eventHelper = serviceRegistrar.getService(CyEventHelper.class);
-		this.sessionManager = serviceRegistrar.getService(CySessionManager.class);
+		this.viewManager = serviceRegistrar.getService(CyNetworkViewManager.class);
+		this.annotationManager = serviceRegistrar.getService(AnnotationManager.class);
 	}
 
 	@Override
@@ -123,9 +126,7 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		taskMonitor.setProgress(0.0d);
 		taskMonitor.setTitle("Merging Networks");
 
-		// Before we go too far, kick all of the networks we're going to merge to get them to 
-		// update their annotations
-		eventHelper.fireEvent(new SessionAboutToBeSavedEvent(sessionManager));
+		Map<CyNetworkView, List<Annotation>> annotationMap = getAnnotations(selectedNetworkList);
 
 		// Create new network (merged network)
 		taskMonitor.setStatusMessage("Creating new merged network...");
@@ -146,9 +147,9 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		// Merge everything
 		networkMerge.mergeNetwork(newNetwork, selectedNetworkList, operation, subtractOnlyUnconnectedNodes);
 
-		taskMonitor.setStatusMessage("Processing conflicts...");
 		// Perform conflict handling if necessary
 		if (!conflictCollector.isEmpty() && !cancelled) {
+			taskMonitor.setStatusMessage("Processing conflicts...");
 			HandleConflictsTask hcTask = new HandleConflictsTask(conflictCollector);
 			insertTasksAfterCurrentTask(hcTask);
 		}
@@ -163,6 +164,14 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 			return;
 		}
 
+		// Note that this has to be before we create the view so that it will execute after
+		// it's created
+		if (annotationMap.size() > 0) {
+			// Fix up annotations
+			FixAnnotationsTask fixAnnotationsTask = new FixAnnotationsTask(serviceRegistrar, newNetwork, annotationMap);
+			insertTasksAfterCurrentTask(fixAnnotationsTask);
+		}
+
 		// Create view
 		taskMonitor.setStatusMessage("Creating view...");
 		final Set<CyNetwork> networks = new HashSet<CyNetwork>();
@@ -170,6 +179,25 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		insertTasksAfterCurrentTask(netViewCreator.createTaskIterator(networks));	
 		
 		taskMonitor.setProgress(1.0d);
+	}
+
+	private Map<CyNetworkView,List<Annotation>> getAnnotations(List<CyNetwork> networkList) {
+		Map<CyNetworkView, List<Annotation>> annotationMap = new HashMap<>();
+
+		List<CyNetworkView> viewList = new ArrayList<>(networkList.size());
+		for (CyNetwork  network: selectedNetworkList) {
+			if (viewManager.viewExists(network)) {
+				viewList.addAll(viewManager.getNetworkViews(network));
+			}
+		}
+
+		for (CyNetworkView view: viewList) {
+			List<Annotation> annotations = annotationManager.getAnnotations(view);
+			if (annotations != null && annotations.size() > 0) {
+				annotationMap.put(view, annotations);
+			}
+		}
+		return annotationMap;
 	}
 
 	@Override
