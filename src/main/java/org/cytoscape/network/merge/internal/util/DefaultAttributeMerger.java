@@ -29,6 +29,7 @@ import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.subnetwork.CyRootNetwork;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollector;
 
 import java.util.ArrayList;
@@ -69,13 +70,19 @@ public class DefaultAttributeMerger implements AttributeMerger {
 					fromValue = colType.castService(fromValue);
 				}
 				final String o2 = cyRow.get(column.getName(), String.class);
-				
+
 				if (o2 == null || o2.length() == 0) { // null or empty attribute
 					cyRow.set(column.getName(), fromValue);
 				} else if (fromValue != null && fromValue.equals(o2)) { // TODO: necessary?
 					// the same, do nothing
 				} else { // attribute conflict
 					// add to conflict collector
+					if (graphObject instanceof CyNetwork) {
+						if (column.getName().equals(CyNetwork.NAME) || column.getName().equals(CyRootNetwork.SHARED_NAME)) {
+							// We don't want to mess with the network name
+							continue;
+						}
+					}
 					conflictCollector.addConflict(from, fromColumn, graphObject, column);
 				}
 			} else if (!colType.isList()) { // simple type (Integer, Long, Double, Boolean)
