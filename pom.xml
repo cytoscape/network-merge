@@ -4,7 +4,7 @@
 
 	<groupId>org.cytoscape</groupId>
 	<artifactId>network-merge</artifactId>
-	<version>3.9.2</version>
+	<version>3.9.3</version>
 	<packaging>bundle</packaging>
 	<name>Network Merge</name>
 
@@ -136,9 +136,9 @@
 			<version>${osgi.api.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<!-- Cytoscape API dependencies -->
-		
+
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>model-api</artifactId>
@@ -162,22 +162,22 @@
 			<artifactId>swing-util-api</artifactId>
 			<version>${cytoscape.api.version}</version>
 			<scope>provided</scope>
-		</dependency>		
-		
+		</dependency>
+
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>command-executor-api</artifactId>
 			<version>${cytoscape.api.version}</version>
 			<scope>provided</scope>
-		</dependency>	
-			
+		</dependency>
+
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>io-api</artifactId>
 			<version>${cytoscape.api.version}</version>
-			<scope>provided</scope>	
-		</dependency>	
-		
+			<scope>provided</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

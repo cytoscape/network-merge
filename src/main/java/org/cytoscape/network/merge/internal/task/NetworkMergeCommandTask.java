@@ -49,34 +49,34 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 
 	  @Tunable(
 				description = "Type of Merge", context= Tunable.NOGUI_CONTEXT,
-				longDescription="Whether the networks are merged by union, intersection or difference", 
+				longDescription="Whether the networks are merged by union, intersection or difference",
 				exampleStringValue = "union"
 		)
 	  public ListSingleSelection<String> operation = new ListSingleSelection<String>("union","intersection","difference");
 
 	@Tunable(
 				description = "Name of the output network", context= Tunable.NOGUI_CONTEXT,
-				longDescription="An override of the name for the network created by this merge", 
+				longDescription="An override of the name for the network created by this merge",
 				exampleStringValue = "Merged Network"
 		)
 	  public String netName;
 
 		@Tunable(
-				description="Source Networks", context="nogui", 
-				longDescription="The comma-delimited names of the input networks", 
+				description="Source Networks", context="nogui",
+				longDescription="The comma-delimited names of the input networks",
 				exampleStringValue="a, b")
 		public String sources;
 
 		@Tunable(
 				description = "Matching Node Columns", context= Tunable.NOGUI_CONTEXT,
-				longDescription="The comma-delimited, order-dependent list of columns to match each node in the source networks", 
+				longDescription="The comma-delimited, order-dependent list of columns to match each node in the source networks",
 				exampleStringValue = "name, shared name"
 		)
 	public  String nodeKeys = "name, name";
 
 		@Tunable(
 				description = "Node Merge Map", context= Tunable.NOGUI_CONTEXT,
-				longDescription="A list of column merge records, each containing a list of column names corresponding to the network list of the form {column1, column2, merged column, type}", 
+				longDescription="A list of column merge records, each containing a list of column names corresponding to the network list of the form {column1, column2, merged column, type}",
 				exampleStringValue = "{name, display name, mergedName, String}, {COMMON, COMMON, COMMON, String}"
 		)
 	public  String nodeMergeMap;
@@ -93,32 +93,32 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 
 	@Tunable(
 			description = "Edge Merge Map", context= Tunable.NOGUI_CONTEXT,
-			longDescription="A list of column merge records, each containing a list of column names from the edge table corresponding to the network list of the form {column1, column2, merged column, type}", 
+			longDescription="A list of column merge records, each containing a list of column names from the edge table corresponding to the network list of the form {column1, column2, merged column, type}",
 			exampleStringValue = "{interaction, shared interaction, relation , String},{name, name, name, String},{EdgeBetweenness, EdgeBetweenness, Betweenness, Double}"
 	)
 	public  String edgeMergeMap;
 
 	@Tunable(
 			description = "Network Merge Map", context= Tunable.NOGUI_CONTEXT,
-			longDescription="A list of column merge records, each containing a list of column names from the network table corresponding to the network list of the form {column1, column2, merged column, type}", 
+			longDescription="A list of column merge records, each containing a list of column names from the network table corresponding to the network list of the form {column1, column2, merged column, type}",
 			exampleStringValue = "{_Annotations, _Annotations, _Annotations, List},{name, name, name, String}"
 	)
 	public  String networkMergeMap;
 
 	@Tunable(
 				description = "Nodes only", context= Tunable.NOGUI_CONTEXT,
-				longDescription="If true, this will merge the node tables and dismiss edges.", 
+				longDescription="If true, this will merge the node tables and dismiss edges.",
 				exampleStringValue = "false"
 		)
-	public boolean nodesOnly;
-	  
+	public boolean nodesOnly = false;
+
 	@Tunable(
 				description = "Enable merging nodes/edges in the same network", context=Tunable.NOGUI_CONTEXT,
 				longDescription="If true, nodes and edges with matching attributes in the same network will be merged",
 				exampleStringValue = "true"
 		)
 	public boolean inNetworkMerge = true;
-	  
+
 	//--------------------------------------------------------------------------------------
 	private CyServiceRegistrar registrar;
 
@@ -127,7 +127,7 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 	// List<CyNetwork> networkList;
 	NetworkMergeTask nmTask;
 
-	public NetworkMergeCommandTask(CyServiceRegistrar reg) {	
+	public NetworkMergeCommandTask(CyServiceRegistrar reg) {
 		registrar = reg;
 		operation.setSelectedValue("union");
 	}
@@ -150,13 +150,13 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		if (verbose) System.out.println(netName);
 
 		List<CyNetwork> networkList = buildNetworkList(cnm);
-		if (verbose) 
+		if (verbose)
 			for (CyNetwork n: networkList)
 			System.out.println(n.getSUID() + " = " + getNetworkName(n));
 
 		if (networkList.size() < 2)
 		{
-			if (verbose) 
+			if (verbose)
 				System.err.println("networkList.size() < 2" );
 			return;
 		}
@@ -174,7 +174,7 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		else if (operation.getSelectedValue().equals("difference"))
 			op = Operation.DIFFERENCE;
 
-		if (verbose) 
+		if (verbose)
 			System.err.println("Operation: " + op.toString() );
 
 
@@ -183,7 +183,7 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 
 		nmTask = new NetworkMergeTask(registrar, netName,
 				matchingAttribute,	nodeAttributeMapping, edgeAttributeMapping, networkAttributeMapping,
-				networkList, op, useDiference, conflictCollector, inNetworkMerge);
+				networkList, op, useDiference, conflictCollector, inNetworkMerge, nodesOnly);
 
 		TaskManager<?,?> tm = registrar.getService(SynchronousTaskManager.class);
 		tm.execute(new TaskIterator(nmTask));
@@ -226,7 +226,7 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		for (String key : keys)
 			strs.add(key.trim());
 
-		if (verbose) 
+		if (verbose)
 		{
 			System.out.print("parseKeys: " );
 			for (String s : keys) System.out.print(s + ", ");
@@ -246,7 +246,7 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 		for (String str : strs)
 			sourceList.add(str.trim());
 
-		if (verbose) 
+		if (verbose)
 		{
 			System.out.print("sources: ");
 			for (String str : sourceList)
@@ -366,7 +366,7 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 //	{
 //		CyNetwork net = node.getNetworkPointer();
 //		return net.getRow(node).get(CyNetwork.NAME, String.class);
-//		
+//
 //	}
 	//---------------------------------------------------------------------
 	public static String getNetAndNodeName(CyNode node)
@@ -405,7 +405,7 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 	@Override
 	public List<Class<?>> getResultClasses() {
 		return Arrays.asList(String.class, CyNetwork.class, JSONResult.class);
-	}	
+	}
 
 	@Override
 	public <R> R getResults(Class<? extends R> type) {

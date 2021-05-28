@@ -9,16 +9,16 @@ package org.cytoscape.network.merge.internal.task;
  * Copyright (C) 2006 - 2013 The Cytoscape Consortium
  * %%
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as 
- * published by the Free Software Foundation, either version 2.1 of the 
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 2.1 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
- * You should have received a copy of the GNU General Lesser Public 
+ *
+ * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-2.1.html>.
  * #L%
@@ -57,15 +57,15 @@ import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.json.JSONResult;
 
 
-public class NetworkMergeTask extends AbstractTask implements ObservableTask {	
+public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 	private final List<CyNetwork> selectedNetworkList;
 	private final Operation operation;
 	private final boolean subtractOnlyUnconnectedNodes;
 	private final AttributeConflictCollector conflictCollector;
 
-	
+
 	final private CreateNetworkViewTaskFactory netViewCreator;
-	final private CyServiceRegistrar serviceRegistrar; 
+	final private CyServiceRegistrar serviceRegistrar;
 
 	private final MatchingAttribute matchingAttribute;
 	private final AttributeMapping nodeAttributeMapping;
@@ -73,6 +73,7 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 	private final AttributeMapping networkAttributeMapping;
 
 	private boolean inNetworkMerge;
+	private boolean nodesOnly;
 
 	private final CyNetworkFactory cnf;
 	private final CyNetworkManager networkManager;
@@ -80,20 +81,20 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 	private final AnnotationManager annotationManager;
 	private final String networkName;
 	private CyNetwork newNetwork;
-	
+
 	private AttributeBasedNetworkMerge networkMerge;
 
 	/**
 	 * Constructor.<br>
-	 * 
+	 *
 	 */
 	public NetworkMergeTask( final CyServiceRegistrar serviceRegistrar,
 			final String networkName, final MatchingAttribute matchingAttribute,
 			final AttributeMapping nodeAttributeMapping, final AttributeMapping edgeAttributeMapping,
-			final AttributeMapping networkAttributeMapping, 
-			final List<CyNetwork> selectedNetworkList, final Operation operation, 
+			final AttributeMapping networkAttributeMapping,
+			final List<CyNetwork> selectedNetworkList, final Operation operation,
 			final boolean subtractOnlyUnconnectedNodes, final AttributeConflictCollector conflictCollector,
-			final boolean inNetworkMerge) {
+			final boolean inNetworkMerge, final boolean nodesOnly) {
 		this.serviceRegistrar = serviceRegistrar;
 		this.selectedNetworkList = selectedNetworkList;
 		this.operation = operation;
@@ -101,6 +102,7 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		this.conflictCollector = conflictCollector;
 		this.matchingAttribute = matchingAttribute;
 		this.inNetworkMerge = inNetworkMerge;
+		this.nodesOnly = nodesOnly;
 		this.nodeAttributeMapping = nodeAttributeMapping;
 		this.edgeAttributeMapping = edgeAttributeMapping;
 		this.networkAttributeMapping = networkAttributeMapping;
@@ -135,7 +137,7 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 
 		// Register merged network
 		networkManager.addNetwork(newNetwork);
-		
+
 		taskMonitor.setStatusMessage("Merging networks...");
 		final AttributeValueMatcher attributeValueMatcher = new DefaultAttributeValueMatcher();
 		final AttributeMerger attributeMerger = new DefaultAttributeMerger(conflictCollector);
@@ -143,9 +145,9 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		this.networkMerge = new AttributeBasedNetworkMerge(matchingAttribute, nodeAttributeMapping, edgeAttributeMapping,
 		    networkAttributeMapping, attributeMerger, attributeValueMatcher, taskMonitor);
 		networkMerge.setWithinNetworkMerge(inNetworkMerge);
-		
+
 		// Merge everything
-		networkMerge.mergeNetwork(newNetwork, selectedNetworkList, operation, subtractOnlyUnconnectedNodes);
+		networkMerge.mergeNetwork(newNetwork, selectedNetworkList, operation, subtractOnlyUnconnectedNodes, nodesOnly);
 
 		// Perform conflict handling if necessary
 		if (!conflictCollector.isEmpty() && !cancelled) {
@@ -176,8 +178,8 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 		taskMonitor.setStatusMessage("Creating view...");
 		final Set<CyNetwork> networks = new HashSet<CyNetwork>();
 		networks.add(newNetwork);
-		insertTasksAfterCurrentTask(netViewCreator.createTaskIterator(networks));	
-		
+		insertTasksAfterCurrentTask(netViewCreator.createTaskIterator(networks));
+
 		taskMonitor.setProgress(1.0d);
 	}
 
@@ -201,7 +203,7 @@ public class NetworkMergeTask extends AbstractTask implements ObservableTask {
 	}
 
 	@Override
-	public List<Class<?>> getResultClasses() { 
+	public List<Class<?>> getResultClasses() {
 		return Arrays.asList(String.class, CyNetwork.class, JSONResult.class);
 	}
 
