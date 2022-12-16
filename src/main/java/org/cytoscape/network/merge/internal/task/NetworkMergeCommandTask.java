@@ -63,8 +63,8 @@ public class NetworkMergeCommandTask extends AbstractTask implements ObservableT
 
 		@Tunable(
 				description="Source Networks", context="nogui",
-				longDescription="The comma-delimited names of the input networks",
-				exampleStringValue="a, b")
+				longDescription="The comma-delimited names of the input networks (max:2)",
+				exampleStringValue= "network1, network2")
 		public String sources;
 
 		@Tunable(
