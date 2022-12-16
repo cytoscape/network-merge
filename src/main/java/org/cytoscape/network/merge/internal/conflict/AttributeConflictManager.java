@@ -53,12 +53,17 @@ public class AttributeConflictManager {
         }
 
         public void handleConflicts() {
+                // System.out.println("Handling conflicts");
 
                 Map<CyIdentifiable,CyColumn> mapToIDToAttr = conflictCollector.getMapToGOAttr();
                 for (Map.Entry<CyIdentifiable,CyColumn> entryToIDToAttr : mapToIDToAttr.entrySet()) {
                         CyIdentifiable toID = entryToIDToAttr.getKey();
                         CyColumn toAttr = entryToIDToAttr.getValue();
+                        // System.out.println("Looking at conflicts for "+toID+":"+toAttr.getName());
                         Map<CyIdentifiable,CyColumn> mapFromIDFromAttr = conflictCollector.getConflicts(toID, toAttr);
+                        // for (CyIdentifiable id: mapFromIDFromAttr.keySet()) {
+                        //   System.out.println("....."+id+":"+mapFromIDFromAttr.get(id).getName()+" conflicts");
+                        // }
                         for (AttributeConflictHandler handler : conflictHandlers) {
                                 if (handler.handleIt(toID,toAttr,mapFromIDFromAttr)) {
                                         conflictCollector.removeConflicts(toID, toAttr);

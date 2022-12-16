@@ -25,7 +25,7 @@ package org.cytoscape.network.merge.internal;
  */
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -148,7 +148,7 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 	@Override
 	protected void mergeNetworks(final List<CyNetwork> nets, CyNetwork newNetwork) {
 		if (networkAttributeMapping == null) return;
-		Map<CyNetwork,Set<CyNetwork>> mapNetNet = new HashMap<>();
+		Map<CyNetwork,Set<CyNetwork>> mapNetNet = new LinkedHashMap<>();
 		for (CyNetwork net: nets) {
 			mapNetNet.put(net, Collections.singleton(net));
 		}
@@ -198,7 +198,7 @@ public class AttributeBasedNetworkMerge extends AbstractNetworkMerge {
 			// System.out.println("Merged attribute ("+i+") is: "+attr_merged.getName());
 
 			// merge
-			Map<T, CyColumn> mapGOAttr = new HashMap<T, CyColumn>();
+			Map<T, CyColumn> mapGOAttr = new LinkedHashMap<T, CyColumn>();
 			final Iterator<Map.Entry<CyNetwork, Set<T>>> itEntryNetGOs = mapNetGOs.entrySet().iterator();
 			while (itEntryNetGOs.hasNext()) {
 				final Map.Entry<CyNetwork, Set<T>> entryNetGOs = itEntryNetGOs.next();

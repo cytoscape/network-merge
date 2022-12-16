@@ -54,6 +54,8 @@ public class DefaultAttributeMerger implements AttributeMerger {
 		if ((mapGOAttr == null) || (graphObject == null) || (column == null))
 			throw new java.lang.IllegalArgumentException("Required parameters cannot be null.");
 
+    // System.out.println("network = "+network);
+    // System.out.println("graphObj = "+graphObject);
 		final CyRow cyRow = network.getRow(graphObject);
 		final ColumnType colType = ColumnType.getType(column);
 
@@ -61,6 +63,8 @@ public class DefaultAttributeMerger implements AttributeMerger {
 			final T from = entryGOAttr.getKey();
 			final CyColumn fromColumn = entryGOAttr.getValue();
 			final CyTable fromTable = fromColumn.getTable();
+      // System.out.println("from = "+from);
+      // System.out.println("fromTable = "+fromTable);
 			final CyRow fromCyRow = fromTable.getRow(from.getSUID());
 			final ColumnType fromColType = ColumnType.getType(fromColumn);
 
@@ -95,13 +99,16 @@ public class DefaultAttributeMerger implements AttributeMerger {
 				// Object o2 = cyRow.get(column.getName(), colType.getType());
 				if (o2 == null) {
 					cyRow.set(column.getName(), o1);
+          // System.out.println("Setting "+column.getName()+" to "+o1);
 					// continue;
 				} else if (o1 == null) {
 					cyRow.set(column.getName(), o2);
+          // System.out.println("Setting "+column.getName()+" to "+o2);
 				} else if (o1.equals(o2)) {
 					// continue; // the same, do nothing
 				} else { // attribute conflict
 
+          // System.out.println(column.getName()+" has a conflict");
 					// add to conflict collector
 					conflictCollector.addConflict(from, fromColumn, graphObject, column);
 					// continue;

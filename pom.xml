@@ -4,7 +4,7 @@
 
 	<groupId>org.cytoscape</groupId>
 	<artifactId>network-merge</artifactId>
-	<version>3.9.3</version>
+	<version>3.9.4</version>
 	<packaging>bundle</packaging>
 	<name>Network Merge</name>
 
@@ -15,7 +15,7 @@
 		<cytoscape.api.version>3.8.0</cytoscape.api.version>
 		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
 		<maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
-		<maven-bundle-plugin.version>4.1.0</maven-bundle-plugin.version>
+		<maven-bundle-plugin.version>5.1.2</maven-bundle-plugin.version>
 		<osgi.api.version>6.0.0</osgi.api.version>
 		<junit.version>4.12</junit.version>
 	</properties>

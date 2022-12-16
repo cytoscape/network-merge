@@ -31,8 +31,9 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
@@ -484,7 +485,7 @@ public abstract class AbstractNetworkMerge implements NetworkMerge {
 				}
 				if (!matched) {
 					// no matched node/edge found, add new map to the list
-					final Map<CyNetwork, Set<T>> matchedGO = new HashMap<CyNetwork, Set<T>>();
+					final Map<CyNetwork, Set<T>> matchedGO = new LinkedHashMap<CyNetwork, Set<T>>();
 					Set<T> gos1 = new HashSet<T>();
 					gos1.add(go1);
 					matchedGO.put(net1, gos1);
