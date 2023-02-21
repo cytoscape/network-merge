@@ -33,11 +33,10 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.AbstractListModel;
 import javax.swing.BorderFactory;
@@ -47,7 +46,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -69,7 +67,6 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.network.merge.internal.NetworkMerge.Operation;
 import org.cytoscape.network.merge.internal.conflict.AttributeConflictCollector;
@@ -81,13 +78,12 @@ import org.cytoscape.network.merge.internal.model.MatchingAttributeImpl;
 import org.cytoscape.network.merge.internal.task.NetworkMergeTask;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CyNetworkNaming;
-import org.cytoscape.task.create.CreateNetworkViewTaskFactory;
 import org.cytoscape.util.swing.BasicCollapsiblePanel;
 import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.util.swing.LookAndFeelUtil;
-import org.cytoscape.work.swing.DialogTaskManager;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
+import org.cytoscape.work.swing.DialogTaskManager;
 
 /**
  * Main dialog for advance network merge
@@ -211,12 +207,12 @@ public class NetworkMergeDialog extends JDialog {
 			operationPnl.setLayout(new BoxLayout(operationPnl, BoxLayout.LINE_AXIS));
 
 			operationPnl.add(Box.createHorizontalGlue());
-
+			
 			int count = 0;
 			final Operation[] values = Operation.values();
 
 			for (Operation op : values) {
-				final JToggleButton btn = new JToggleButton(op.toString(), op.getIcon());
+				final JToggleButton btn = new JToggleButton(op.toString(), op.getIcon(iconMgr, 15.0f, 16, 16));
 				btn.setActionCommand(op.name());
 				operationGroup.add(btn);
 				operationButtons.put(op, btn);
@@ -395,6 +391,7 @@ public class NetworkMergeDialog extends JDialog {
 			unselectedNetLs.setCellRenderer(new ListCellRenderer<CyNetwork>() {
 				private DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
 
+				@Override
 				public Component getListCellRendererComponent(JList<? extends CyNetwork> list, CyNetwork value,
 						int index, boolean isSelected, boolean cellHasFocus) {
 					JLabel renderer = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected,
@@ -518,6 +515,7 @@ public class NetworkMergeDialog extends JDialog {
 			moveLeftBtn.setToolTipText("Remove Selected");
 			moveLeftBtn.setEnabled(false);
 			moveLeftBtn.addActionListener(new ActionListener() {
+				@Override
 				public void actionPerformed(ActionEvent evt) {
 					int[] indices = getSelectedNetLs().getSelectedIndices();
 					if (indices == null || indices.length == 0) {

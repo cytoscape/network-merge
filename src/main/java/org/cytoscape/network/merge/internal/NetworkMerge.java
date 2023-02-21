@@ -26,18 +26,20 @@ package org.cytoscape.network.merge.internal;
 
 import java.util.List;
 
-import javax.swing.ImageIcon;
+import javax.swing.Icon;
 
 import org.cytoscape.model.CyNetwork;
+import org.cytoscape.util.swing.IconManager;
+import org.cytoscape.util.swing.TextIcon;
 
 /**
  * Interface of merging networks
  */
 public interface NetworkMerge {
 
-	final ImageIcon UNION_ICON = new ImageIcon(NetworkMerge.class.getResource("/images/venn-union-16.png"));
-	final ImageIcon INTERSECTION_ICON = new ImageIcon(NetworkMerge.class.getResource("/images/venn-intersection-16.png"));
-	final ImageIcon DIFFERENCE_ICON = new ImageIcon(NetworkMerge.class.getResource("/images/venn-difference-16.png"));
+	final String UNION_ICON = "s";
+	final String INTERSECTION_ICON = "r";
+	final String DIFFERENCE_ICON = "q";
 
 	public enum Operation {
 		UNION("Union", UNION_ICON),
@@ -45,15 +47,15 @@ public interface NetworkMerge {
 		DIFFERENCE("Difference", DIFFERENCE_ICON);
 
 		private final String opName;
-		private final ImageIcon icon;
+		private String iconText;
 
-		private Operation(final String opName, final ImageIcon icon) {
+		private Operation(String opName, String iconText) {
 			this.opName = opName;
-			this.icon = icon;
+			this.iconText = iconText;
 		}
 
-		public ImageIcon getIcon() {
-			return icon;
+		public Icon getIcon(IconManager iconManager, float fontSize, int width, int height) {
+			return new TextIcon(iconText, iconManager.getIconFont("cytoscape-3", fontSize), width, height);
 		}
 
 		@Override
