@@ -65,6 +65,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkManager;
@@ -84,6 +86,7 @@ import org.cytoscape.util.swing.LookAndFeelUtil;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.swing.DialogTaskManager;
+
 
 /**
  * Main dialog for advance network merge
@@ -301,15 +304,28 @@ public class NetworkMergeDialog extends JDialog {
 		return differencePnl;
 	}
 
+
 	private JRadioButton getDifference1Btn() {
 		if (difference1Btn == null) {
 			difference1Btn = new JRadioButton("Only remove nodes if all their edges are being subtracted, too");
-			difference1Btn.setSelected(true);
+			difference1Btn.setSelected(true); // Default selection
+	
+			difference1Btn.addItemListener(new ItemListener() {
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					if (difference1Btn.isSelected()) {
+						getNodesOnly().setSelected(false);   // Unselect checkbox
+						getNodesOnly().setEnabled(false);    // Disable checkbox
+					} else {
+						getNodesOnly().setEnabled(true);     // Enable checkbox when radio button is deselected
+					}
+				}
+			});
 		}
-
+	
 		return difference1Btn;
 	}
-
+	
 	private JRadioButton getDifference2Btn() {
 		if (difference2Btn == null) {
 			difference2Btn = new JRadioButton("Remove all nodes that are in the 2\u207F\u1D48 network");
@@ -832,12 +848,28 @@ public class NetworkMergeDialog extends JDialog {
 	private JCheckBox getNodesOnly() {
 		if (NodesOnly == null) {
 			NodesOnly = new JCheckBox("Merge only nodes and ignore edges");
-			NodesOnly.setSelected(false);
-			NodesOnly.setEnabled(false);
+			NodesOnly.setSelected(false);   // Default unselected
+	
+			NodesOnly.addItemListener(new ItemListener() {
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					if (NodesOnly.isSelected()) {
+						getDifference1Btn().setSelected(false);  // Unselect radio button
+						getDifference1Btn().setEnabled(false);   // Disable radio button
+					} else {
+						getDifference1Btn().setEnabled(true);    // Enable radio button when checkbox is deselected
+					}
+				}
+			});
+	
+			// Set initial enabled state based on difference1Btn's selection
+			// Ensure difference1Btn is initialized before checking its state
+			getDifference1Btn(); // Initialize difference1Btn if it hasn't been already
+			NodesOnly.setEnabled(!difference1Btn.isSelected());
 		}
+	
 		return NodesOnly;
 	}
-
 	private JPanel getButtonPnl() {
 		if (buttonPnl == null) {
 			buttonPnl = LookAndFeelUtil.createOkCancelPanel(getOkBtn(), getCancelBtn());
@@ -961,7 +993,7 @@ public class NetworkMergeDialog extends JDialog {
 	}
 
 	private void updateOperationPanel() {
-		getNodesOnly().setEnabled(selectedOperation == Operation.INTERSECTION || selectedOperation == Operation.DIFFERENCE);
+		getNodesOnly().setEnabled(selectedOperation == Operation.INTERSECTION);
 		pack();
 	}
 
