@@ -6,3 +6,4 @@ target/
 .classpath
 bin/
 *node_modules/
+.vscode/settings.json
