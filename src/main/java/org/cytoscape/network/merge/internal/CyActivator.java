@@ -1,12 +1,29 @@
 package org.cytoscape.network.merge.internal;
 
+import static org.cytoscape.work.ServiceProperties.COMMAND;
+import static org.cytoscape.work.ServiceProperties.COMMAND_DESCRIPTION;
+import static org.cytoscape.work.ServiceProperties.COMMAND_EXAMPLE_JSON;
+import static org.cytoscape.work.ServiceProperties.COMMAND_LONG_DESCRIPTION;
+import static org.cytoscape.work.ServiceProperties.COMMAND_NAMESPACE;
+import static org.cytoscape.work.ServiceProperties.COMMAND_SUPPORTS_JSON;
+import static org.cytoscape.work.ServiceProperties.ID;
+
+import java.util.Properties;
+
+import org.cytoscape.application.swing.CyAction;
+import org.cytoscape.network.merge.internal.task.NetworkMergeCommandTaskFactory;
+import org.cytoscape.service.util.AbstractCyActivator;
+import org.cytoscape.service.util.CyServiceRegistrar;
+import org.cytoscape.work.TaskFactory;
+import org.osgi.framework.BundleContext;
+
 /*
  * #%L
  * Cytoscape Merge Impl (network-merge-impl)
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2006 - 2013 The Cytoscape Consortium
+ * Copyright (C) 2006 - 2026 The Cytoscape Consortium
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as 
@@ -24,55 +41,23 @@ package org.cytoscape.network.merge.internal;
  * #L%
  */
 
-import java.util.Properties;
-
-import org.cytoscape.application.swing.CyAction;
-import org.cytoscape.service.util.AbstractCyActivator;
-import org.cytoscape.service.util.CyServiceRegistrar;
-import org.cytoscape.work.ServiceProperties;
-import org.cytoscape.work.TaskFactory;
-import org.osgi.framework.BundleContext;
-
-import org.cytoscape.network.merge.internal.task.NetworkMergeTaskFactory;
-import org.cytoscape.network.merge.internal.task.NetworkMergeCommandTaskFactory;
-
-import static org.cytoscape.work.ServiceProperties.COMMAND;
-import static org.cytoscape.work.ServiceProperties.COMMAND_DESCRIPTION;
-import static org.cytoscape.work.ServiceProperties.COMMAND_EXAMPLE_JSON;
-import static org.cytoscape.work.ServiceProperties.COMMAND_LONG_DESCRIPTION;
-import static org.cytoscape.work.ServiceProperties.COMMAND_NAMESPACE;
-import static org.cytoscape.work.ServiceProperties.COMMAND_SUPPORTS_JSON;
-import static org.cytoscape.work.ServiceProperties.IN_MENU_BAR;
-import static org.cytoscape.work.ServiceProperties.MENU_GRAVITY;
-import static org.cytoscape.work.ServiceProperties.PREFERRED_MENU;
-import static org.cytoscape.work.ServiceProperties.TITLE;
-
-
 public class CyActivator extends AbstractCyActivator {
 	
-	public CyActivator() {
-		super();
-	}
-
 	@Override
 	public void start(BundleContext bc) {
-
-		CyServiceRegistrar serviceRegistrar = getService(bc, CyServiceRegistrar.class);
+		var serviceRegistrar = getService(bc, CyServiceRegistrar.class);
 
 		{
-			NetworkMergeTaskFactory mergeTask = new NetworkMergeTaskFactory(serviceRegistrar);
-
-			final Properties props = new Properties();
-			props.setProperty(TITLE, "Networks...");
-			props.setProperty(PREFERRED_MENU, "Tools.Merge");
-			props.setProperty(IN_MENU_BAR, "true");
-			props.setProperty(MENU_GRAVITY, "0.1");
-			registerService(bc, mergeTask, TaskFactory.class, props); 
+			// Registered as a CyAction with a well-known id so other apps (e.g. PSICQUIC) can invoke it
+			var mergeAction = new NetworkMergeAction(serviceRegistrar);
+			
+			var props = new Properties();
+			props.setProperty(ID, NetworkMergeAction.ID);
+			registerService(bc, mergeAction, CyAction.class, props);
 		}
-
 		{
-			NetworkMergeCommandTaskFactory mergeTask = new NetworkMergeCommandTaskFactory(serviceRegistrar);
-			Properties props = new Properties();
+			var mergeTask = new NetworkMergeCommandTaskFactory(serviceRegistrar);
+			var props = new Properties();
 			props.setProperty(COMMAND_NAMESPACE, "network");
 			props.setProperty(COMMAND, "merge");
 			props.setProperty(COMMAND_DESCRIPTION, "Merge two or more networks");
@@ -81,6 +66,5 @@ public class CyActivator extends AbstractCyActivator {
 			props.setProperty(COMMAND_EXAMPLE_JSON, "{\"Merged Table\":\"12345\"}");
 			registerService(bc, mergeTask, TaskFactory.class, props);
 		}
-
 	}
 }

@@ -67,7 +67,7 @@ class RowTableCellEditor implements TableCellEditor {
    *            table cell editor
    */
   public void setEditorAt(int row, TableCellEditor editor) {
-    editors.put(new Integer(row), editor);
+    editors.put(Integer.valueOf(row), editor);
   }
 
   public Component getTableCellEditorComponent(JTable table, Object value,
@@ -113,7 +113,7 @@ class RowTableCellEditor implements TableCellEditor {
     } else {
       row = table.rowAtPoint(e.getPoint());
     }
-    editor = (TableCellEditor) editors.get(new Integer(row));
+    editor = (TableCellEditor) editors.get(Integer.valueOf(row));
     if (editor == null) {
       editor = defaultEditor;
     }
